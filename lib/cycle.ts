@@ -1,0 +1,55 @@
+export function getNextCycleStartDate(
+  startDay: number,
+  fromDate: Date = new Date()
+): Date {
+  const year = fromDate.getFullYear();
+  const month = fromDate.getMonth();
+
+  // Create a date for the start day of the current month
+  let cycleStart = new Date(year, month, startDay);
+
+  // If that date is in the past, use next month
+  if (cycleStart < fromDate) {
+    cycleStart = new Date(year, month + 1, startDay);
+  }
+
+  return cycleStart;
+}
+
+export function getNextCycleEndDate(
+  startDay: number,
+  fromDate: Date = new Date()
+): Date {
+  const nextStart = getNextCycleStartDate(startDay, fromDate);
+  const year = nextStart.getFullYear();
+  const month = nextStart.getMonth();
+
+  // End date is one day before the next cycle's start
+  return new Date(year, month + 1, startDay - 1);
+}
+
+export function getCurrentCycleProgress(
+  cycleStartDate: Date,
+  cycleEndDate: Date,
+  today: Date = new Date()
+): number {
+  const totalDays =
+    (cycleEndDate.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24);
+  const elapsedDays =
+    (today.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24);
+
+  return Math.round((elapsedDays / totalDays) * 100);
+}
+
+export function formatCyclePeriod(startDate: Date, endDate: Date): string {
+  const startStr = startDate.toLocaleDateString("es-AR", {
+    month: "short",
+    day: "numeric",
+  });
+  const endStr = endDate.toLocaleDateString("es-AR", {
+    month: "short",
+    day: "numeric",
+  });
+
+  return `${startStr} — ${endStr}`;
+}
