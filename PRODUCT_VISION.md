@@ -15,7 +15,7 @@
 ### Fase 1: Fundación y Auth
 - ✅ Setup Next.js + Supabase + Orion DS
 - ✅ Autenticación: signup, login, password validation
-- ✅ Creación de hogar (nombre, moneda, día de ciclo)
+- ✅ Creación de space (nombre, moneda, día de ciclo)
 - ✅ Invitación por email con token temporal
 - ✅ Aceptación de invitación y onboarding del partner
 
@@ -27,7 +27,7 @@
 
 ### Fase 3: Gastos
 - ✅ Agregar gasto: monto, quién pagó, fecha, descripción
-- ✅ División automática según regla del hogar
+- ✅ División automática según regla del space
 - ✅ Editar y eliminar gastos (ciclo activo solo)
 - ✅ Lista de gastos con visualización de estado
 - ✅ Balance en tiempo real (Supabase Realtime)
@@ -47,7 +47,7 @@
 ### Features Adicionales Implementados
 - ✅ Notificaciones en tiempo real (ActivityFeed)
 - ✅ Settings: actualización de ingresos
-- ✅ Miembros del hogar: visualización de split %
+- ✅ Miembros del space: visualización de split %
 - ✅ Email notifications: invitaciones, expense alerts, reviews
 - ✅ Realtime subscriptions a expenses y reviews tables
 - ✅ Server-side rendering por defecto (sin spinners)
@@ -68,7 +68,7 @@ pawo/
 │   │   ├── expenses/           ← Lista + formulario
 │   │   ├── expenses/[id]/      ← Detalle + reviews
 │   │   ├── cycle/              ← Progreso + cierre
-│   │   ├── settings/           ← Config hogar + ingresos
+│   │   ├── settings/           ← Config del space + ingresos
 │   │   └── notifications/      ← Activity feed
 │   ├── onboarding/             ← 3-step wizard
 │   └── invite/[token]/         ← Landing de invitación
@@ -81,7 +81,7 @@ pawo/
 │   ├── balance/                ← BalanceDisplay (realtime)
 │   ├── expenses/               ← ExpensesList, ReviewPanel
 │   ├── cycle/                  ← CycleSummary, CloseCycleModal
-│   └── household/              ← Invite cards
+│   └── spaces/                 ← Space list & details
 └── supabase/
     └── migrations/             ← Schema + reviews tables
 ```
@@ -97,8 +97,8 @@ pawo/
 
 ### Base de Datos (Supabase PostgreSQL)
 ```sql
-households          → Hogar, config, división
-household_members   → Miembros, ingresos, split %
+spaces              → Space, config, división
+space_members       → Miembros, ingresos, split %
 cycles              → Períodos abiertos/cerrados
 expenses            → Gastos del ciclo
 reviews             → Solicitudes de revisión
@@ -209,10 +209,10 @@ suggestSplit(incomeA, incomeB) {
 - [ ] Modo presupuesto: "Este mes queremos gastar < $X"
 - [ ] Alertas de límite de gasto
 
-### Fase 7 — Hogares Múltiples & Grupos (Semanas 9-10)
+### Fase 7 — Spaces Múltiples & Grupos (Semanas 9-10)
 **Objetivo:** Expandir del modelo pareja a otros casos
 
-- [ ] Soporte para 3+ personas en hogar
+- [ ] Soporte para 3+ personas en space
 - [ ] Dividir ciertos gastos de forma selectiva (ej: solo A y B, no C)
 - [ ] Grupos para vacaciones de amigos, eventos, etc.
 - [ ] Estadísticas de equidad a lo largo del tiempo
@@ -273,7 +273,7 @@ suggestSplit(incomeA, incomeB) {
 - ✅ Incremental Static Regeneration posible para reportes
 
 ### Por qué Supabase (no Firebase)
-- ✅ PostgreSQL: Relaciones complejas (cycles, reviews, household_members)
+- ✅ PostgreSQL: Relaciones complejas (cycles, reviews, space_members)
 - ✅ Realtime: Suscripción nativa a tabla (expenses)
 - ✅ Auth: JWT, session handling, email confirmación
 - ✅ Costo: Gratuito hasta cierto uso

@@ -27,7 +27,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```bash
 npm run dev
 # Open http://localhost:3000
-# Sign up → create household → try adding an expense
+# Sign up → create space → try adding an expense
 ```
 
 ### 4. Deploy to Vercel (Optional but Recommended)
@@ -49,18 +49,18 @@ npm run dev
 - [ ] Session persists on page reload
 
 ### Onboarding
-- [ ] Wizard step 1: Create household
+- [ ] Wizard step 1: Create space
 - [ ] Wizard step 2: Choose split mode (manual works, income mode works)
 - [ ] Wizard step 3: Invite partner
-- [ ] Household created in database
+- [ ] Space created in database
 - [ ] Partner can receive invite link
 
 ### Invitation
 - [ ] Email shows invite link (check console for now)
-- [ ] Click link → sees household name
+- [ ] Click link → sees space name
 - [ ] New user can sign up from invite
 - [ ] Existing user can log in + accept
-- [ ] User auto-added to household
+- [ ] User auto-added to space
 - [ ] Can't accept expired/invalid token
 
 ### Expenses
@@ -121,7 +121,7 @@ const { error } = await resend.emails.send({
   from: 'invites@pawo.app',
   to: data.partnerEmail,
   subject: 'You're invited to Pawo!',
-  html: `<a href="${inviteUrl}">Join household</a>`
+  html: `<a href="${inviteUrl}">Join space</a>`
 });
 ```
 
@@ -130,7 +130,7 @@ const { error } = await resend.emails.send({
 
 **Implementation**:
 - `/settings` page with forms
-- Update household config
+- Update space config
 - Update member income
 - View members
 - Option to invite new partner
@@ -196,13 +196,13 @@ type Category = 'groceries' | 'utilities' | 'entertainment' | 'transport' | 'oth
 
 ## 🚀 Phase 4: Expansion (After Proving Concept)
 
-### Multi-Person Households
+### Multi-Person Spaces
 - Extend from couples → roommates, families, groups
 - Update balance calculation for 3+ people
 - Split modes for groups
 
 ### Recurring Shared Trips
-- Create "trip" household
+- Create "trip" space
 - Track shared expenses during trip
 - Settlement at end
 
