@@ -1,16 +1,16 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { updateHouseholdMember } from "@/lib/supabase/queries";
+import { updateSpaceMember } from "@/lib/supabase/queries";
 import { suggestSplit } from "@/lib/balance";
 import { revalidatePath } from "next/cache";
 
 export async function updateIncomeAction({
-  householdId,
+  spaceId,
   userId,
   monthlyIncome,
 }: {
-  householdId: string;
+  spaceId: string;
   userId: string;
   monthlyIncome: number | null;
 }) {
@@ -31,10 +31,10 @@ export async function updateIncomeAction({
 
     // Get current user's household member record
     const { data: currentMember } = await supabase
-      .from("household_members")
+      .from("space_members")
       .select("id")
       .eq("user_id", userId)
-      .eq("household_id", householdId)
+      .eq("space_id", spaceId)
       .single();
 
     if (!currentMember) {
@@ -43,9 +43,9 @@ export async function updateIncomeAction({
 
     // Get all household members to recalculate splits
     const { data: members } = await supabase
-      .from("household_members")
+      .from("space_members")
       .select("*")
-      .eq("household_id", householdId);
+      .eq("space_id", spaceId);
 
     if (!members || members.length !== 2) {
       return { error: "Income mode requires exactly 2 members" };
@@ -72,7 +72,7 @@ export async function updateIncomeAction({
     }
 
     // Update current user's income and percentage
-    const updateCurrentResult = await updateHouseholdMember(
+    const updateCurrentResult = await updateSpaceMember(
       supabase,
       currentMember.id,
       {
@@ -88,14 +88,14 @@ export async function updateIncomeAction({
     // Update partner's percentage (if both have income)
     if (monthlyIncome && partnerIncome) {
       const { data: partnerMember } = await supabase
-        .from("household_members")
+        .from("space_members")
         .select("id")
         .eq("user_id", partner.user_id)
-        .eq("household_id", householdId)
+        .eq("space_id", spaceId)
         .single();
 
       if (partnerMember) {
-        await updateHouseholdMember(supabase, partnerMember.id, {
+        await updateSpaceMember(supabase, partnerMember.id, {
           split_percentage: newPercentagePartner,
         });
       }

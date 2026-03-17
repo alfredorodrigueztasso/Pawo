@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ExpensesList } from "./ExpensesList";
 import { addExpenseAction } from "../home/actions";
-import type { HouseholdMember } from "@/types";
+import type { SpaceMember } from "@/types";
 
 export const metadata = {
   title: "Expenses — Pawo",
@@ -20,50 +20,50 @@ export default async function ExpensesPage() {
     return <div className="p-8 text-center">Not authenticated</div>;
   }
 
-  // Get active household
-  const householdResult = await supabase
-    .from("household_members")
-    .select("household_id")
+  // Get active space
+  const spaceResult = await supabase
+    .from("space_members")
+    .select("space_id")
     .eq("user_id", user.id)
     .single();
 
-  if (!householdResult.data) {
+  if (!spaceResult.data) {
     return (
       <div className="p-8">
         <Card className="p-8 text-center">
-          <p className="text-gray-600">No household found</p>
+          <p className="text-secondary">No space found</p>
         </Card>
       </div>
     );
   }
 
-  const householdId = householdResult.data.household_id;
+  const spaceId = spaceResult.data.space_id;
 
-  // Get household and cycle
-  const [householdDetailsResult, cycleResult] = await Promise.all([
+  // Get space and cycle
+  const [spaceDetailsResult, cycleResult] = await Promise.all([
     supabase
-      .from("households")
-      .select("*, household_members(*)")
-      .eq("id", householdId)
+      .from("spaces")
+      .select("*, space_members(*)")
+      .eq("id", spaceId)
       .single(),
     supabase
       .from("cycles")
       .select("*")
-      .eq("household_id", householdId)
+      .eq("space_id", spaceId)
       .eq("status", "open")
       .order("start_date", { ascending: false })
       .limit(1)
       .single(),
   ]);
 
-  const household = householdDetailsResult.data;
+  const space = spaceDetailsResult.data;
   const cycle = cycleResult.data;
 
   if (!cycle) {
     return (
       <div className="p-8">
         <Card className="p-8 text-center">
-          <p className="text-gray-600">No active cycle</p>
+          <p className="text-secondary">No active cycle</p>
         </Card>
       </div>
     );
@@ -77,22 +77,22 @@ export default async function ExpensesPage() {
     .order("date", { ascending: false });
 
   const expenses = expensesResult.data || [];
-  const members: HouseholdMember[] = household?.household_members || [];
+  const members: SpaceMember[] = space?.space_members || [];
 
   return (
     <div className="p-8 space-y-8">
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-4xl font-bold mb-2">Expenses</h1>
-          <p className="text-gray-600">Track all expenses for this cycle</p>
+          <p className="text-secondary">Track all expenses for this cycle</p>
         </div>
       </div>
 
       {/* Add Expense Form */}
-      <Card className="p-6 bg-blue-50">
+      <Card className="p-6 bg-surface-subtle">
         <h3 className="text-lg font-semibold mb-4">Add new expense</h3>
         <form action={addExpenseAction} className="space-y-3">
-          <input type="hidden" name="householdId" value={householdId} />
+          <input type="hidden" name="spaceId" value={spaceId} />
           <input type="hidden" name="cycleId" value={cycle.id} />
 
           <div className="grid grid-cols-2 gap-3">
@@ -109,7 +109,7 @@ export default async function ExpensesPage() {
               <select
                 name="paidBy"
                 defaultValue="me"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-border-subtle rounded-lg"
               >
                 <option value="me">Me</option>
                 {members.map((m) => (
@@ -140,8 +140,10 @@ export default async function ExpensesPage() {
         <ExpensesList
           expenses={expenses}
           members={members}
-          householdId={householdId}
+          spaceId={spaceId}
           cycleId={cycle.id}
+          currency={space?.currency || "CLP"}
+          currentUserId={user.id}
         />
       </div>
     </div>

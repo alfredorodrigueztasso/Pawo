@@ -1,8 +1,9 @@
 "use client";
 
-import { Card, Button } from "@orion-ds/react";
+import { Card, Button, Field, Alert, Textarea } from "@orion-ds/react/client";
 import { useState } from "react";
 import { requestReviewAction, respondToReviewAction } from "./actions";
+import { formatCurrency } from "@/lib/currency";
 import type { Review } from "@/types";
 
 interface ReviewPanelProps {
@@ -12,6 +13,7 @@ interface ReviewPanelProps {
   canRespond: boolean;
   canRequestReview: boolean;
   currentUserId: string;
+  currency: string;
 }
 
 export function ReviewPanel({
@@ -21,6 +23,7 @@ export function ReviewPanel({
   canRespond,
   canRequestReview,
   currentUserId,
+  currency,
 }: ReviewPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,10 +78,10 @@ export function ReviewPanel({
   // No review exists - show request review form
   if (canRequestReview && !currentReview) {
     return (
-      <Card className="p-8 border-2 border-blue-200 bg-blue-50">
+      <Card className="p-8">
         <div className="space-y-4">
           <h3 className="text-lg font-bold">Request a review</h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-secondary">
             Ask {paidByName} a question about this expense
           </p>
 
@@ -88,39 +91,25 @@ export function ReviewPanel({
             </Button>
           ) : (
             <form onSubmit={handleRequestReview} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Your question
-                </label>
-                <textarea
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="e.g., Can you confirm this amount?"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                  required
-                />
-              </div>
+              <Textarea
+                label="Your question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="e.g., Can you confirm this amount?"
+                rows={3}
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Suggested amount (optional)
-                </label>
-                <input
-                  type="number"
-                  value={suggestedAmount}
-                  onChange={(e) => setSuggestedAmount(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <Field
+                label="Suggested amount (optional)"
+                type="number"
+                value={suggestedAmount}
+                onChange={(e) => setSuggestedAmount(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+              />
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
+              {error && <Alert variant="error">{error}</Alert>}
 
               <div className="flex gap-3">
                 <Button
@@ -154,46 +143,37 @@ export function ReviewPanel({
   // Review exists and current user can respond
   if (canRespond && currentReview && currentReview.status === "pending") {
     return (
-      <Card className="p-8 border-2 border-amber-200 bg-amber-50">
+      <Card className="p-8">
         <div className="space-y-4">
           <h3 className="text-lg font-bold">Respond to review request</h3>
 
-          <div className="bg-white rounded-lg p-4 space-y-3">
+          <div className="bg-surface-layer rounded-lg p-4 space-y-3">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Question from partner</p>
-              <p className="text-lg">{currentReview.question}</p>
+              <p className="text-sm text-secondary mb-1">Question from partner</p>
+              <p className="text-lg text-primary">{currentReview.question}</p>
             </div>
 
             {currentReview.suggested_amount && (
-              <div className="pt-3 border-t">
-                <p className="text-sm text-gray-600 mb-1">Suggested amount</p>
-                <p className="text-xl font-semibold">
-                  ${currentReview.suggested_amount.toFixed(2)}
+              <div className="pt-3 border-t border-border-subtle">
+                <p className="text-sm text-secondary mb-1">Suggested amount</p>
+                <p className="text-xl font-semibold text-primary">
+                  {formatCurrency(currentReview.suggested_amount, currency)}
                 </p>
               </div>
             )}
           </div>
 
           <form onSubmit={handleRespondToReview} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Your response
-              </label>
-              <textarea
-                value={response}
-                onChange={(e) => setResponse(e.target.value)}
-                placeholder="e.g., Yes, I confirm the amount"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
-                required
-              />
-            </div>
+            <Textarea
+              label="Your response"
+              value={response}
+              onChange={(e) => setResponse(e.target.value)}
+              placeholder="e.g., Yes, I confirm the amount"
+              rows={3}
+              required
+            />
 
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+            {error && <Alert variant="error">{error}</Alert>}
 
             <div className="flex gap-3">
               <Button variant="secondary" type="button" className="flex-1">
@@ -217,23 +197,19 @@ export function ReviewPanel({
   // Review is resolved
   if (currentReview && currentReview.status === "resolved") {
     return (
-      <Card className="p-8 bg-green-50 border-2 border-green-200">
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold text-green-900">Review resolved</h3>
+      <Alert variant="success">
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm text-secondary mb-1">Question</p>
+            <p className="text-lg text-primary">{currentReview.question}</p>
+          </div>
 
-          <div className="space-y-3">
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Question</p>
-              <p className="text-lg">{currentReview.question}</p>
-            </div>
-
-            <div className="bg-white rounded-lg p-4">
-              <p className="text-sm text-gray-600 mb-1">Response</p>
-              <p className="text-lg">{currentReview.response}</p>
-            </div>
+          <div>
+            <p className="text-sm text-secondary mb-1">Response</p>
+            <p className="text-lg text-primary">{currentReview.response}</p>
           </div>
         </div>
-      </Card>
+      </Alert>
     );
   }
 

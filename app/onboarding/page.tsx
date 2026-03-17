@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, Button, Field } from "@orion-ds/react";
+import { Card, Button, Field, Select, Alert } from "@orion-ds/react/client";
 import { useState } from "react";
-import { createHouseholdAction } from "./actions";
+import { createSpaceAction } from "./actions";
 
 type Step = 1 | 2 | 3;
 
@@ -12,7 +12,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    householdName: "",
+    spaceName: "",
     currency: "ARS",
     cycleStartDay: "1",
     splitMode: "manual" as "manual" | "income",
@@ -32,9 +32,11 @@ export default function OnboardingPage() {
     setError(null);
     setLoading(true);
 
+    let isRedirecting = false;
+
     try {
       if (step === 1) {
-        if (!formData.householdName || !formData.cycleStartDay) {
+        if (!formData.spaceName || !formData.cycleStartDay) {
           setError("Please fill in all fields");
           setLoading(false);
           return;
@@ -43,9 +45,9 @@ export default function OnboardingPage() {
       } else if (step === 2) {
         setStep(3);
       } else if (step === 3) {
-        // Create household and send invitation
-        const result = await createHouseholdAction({
-          name: formData.householdName,
+        // Create space and send invitation
+        const result = await createSpaceAction({
+          name: formData.spaceName,
           currency: formData.currency,
           cycle_start_day: parseInt(formData.cycleStartDay),
           split_mode: formData.splitMode,
@@ -57,12 +59,15 @@ export default function OnboardingPage() {
           setError(result.error);
           setLoading(false);
         } else {
-          // Success - redirect to home
-          window.location.href = "/home";
+          // Success - redirect to spaces
+          isRedirecting = true;
+          window.location.href = "/spaces";
         }
       }
     } finally {
-      setLoading(false);
+      if (!isRedirecting) {
+        setLoading(false);
+      }
     }
   }
 
@@ -79,68 +84,56 @@ export default function OnboardingPage() {
             <div
               key={s}
               className={`h-2 flex-1 rounded-full ${
-                s <= step ? "bg-blue-600" : "bg-gray-200"
+                s <= step ? "bg-brand" : "bg-surface-subtle"
               }`}
             />
           ))}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Step 1: Household details */}
+          {/* Step 1: Space details */}
           {step === 1 && (
             <>
               <div>
-                <h2 className="text-2xl font-bold mb-1">Create your household</h2>
-                <p className="text-sm text-gray-600">
+                <h2 className="text-2xl font-bold mb-1">Create your space</h2>
+                <p className="text-sm text-secondary">
                   Step 1 of 3: Basic information
                 </p>
               </div>
 
               <Field
-                label="Household name"
+                label="Space name"
                 type="text"
-                name="householdName"
-                value={formData.householdName}
+                name="spaceName"
+                value={formData.spaceName}
                 onChange={handleInputChange}
                 placeholder="e.g., Our Home"
                 required
               />
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Currency
-                </label>
-                <select
-                  name="currency"
-                  value={formData.currency}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="ARS">ARS (Argentine Peso)</option>
-                  <option value="USD">USD (US Dollar)</option>
-                  <option value="EUR">EUR (Euro)</option>
-                  <option value="CLP">CLP (Chilean Peso)</option>
-                  <option value="MXN">MXN (Mexican Peso)</option>
-                </select>
-              </div>
+              <Select
+                label="Currency"
+                name="currency"
+                value={formData.currency}
+                onChange={handleInputChange}
+              >
+                <Select.Option value="ARS">ARS (Argentine Peso)</Select.Option>
+                <Select.Option value="USD">USD (US Dollar)</Select.Option>
+                <Select.Option value="EUR">EUR (Euro)</Select.Option>
+                <Select.Option value="CLP">CLP (Chilean Peso)</Select.Option>
+                <Select.Option value="MXN">MXN (Mexican Peso)</Select.Option>
+              </Select>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Cycle starts on day (1-28)
-                </label>
-                <input
-                  type="number"
-                  name="cycleStartDay"
-                  min="1"
-                  max="28"
-                  value={formData.cycleStartDay}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <p className="text-xs text-gray-500 mt-2">
-                  Your expense cycles will run from this day each month
-                </p>
-              </div>
+              <Field
+                label="Cycle starts on day (1-28)"
+                type="number"
+                name="cycleStartDay"
+                min="1"
+                max="28"
+                value={formData.cycleStartDay}
+                onChange={handleInputChange}
+                helperText="Your expense cycles will run from this day each month"
+              />
             </>
           )}
 
@@ -149,16 +142,16 @@ export default function OnboardingPage() {
             <>
               <div>
                 <h2 className="text-2xl font-bold mb-1">How do you split?</h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-secondary">
                   Step 2 of 3: Division method
                 </p>
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition"
+                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-lg cursor-pointer hover:border-brand transition"
                   style={{
                     borderColor:
-                      formData.splitMode === "manual" ? "rgb(37, 99, 235)" : undefined,
+                      formData.splitMode === "manual" ? "var(--text-brand)" : undefined,
                   }}
                 >
                   <input
@@ -170,17 +163,17 @@ export default function OnboardingPage() {
                     className="w-4 h-4"
                   />
                   <div>
-                    <p className="font-medium">Fixed split</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-primary">Fixed split</p>
+                    <p className="text-sm text-secondary">
                       50/50, 60/40, or any percentage you choose
                     </p>
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-500 transition"
+                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-lg cursor-pointer hover:border-brand transition"
                   style={{
                     borderColor:
-                      formData.splitMode === "income" ? "rgb(37, 99, 235)" : undefined,
+                      formData.splitMode === "income" ? "var(--text-brand)" : undefined,
                   }}
                 >
                   <input
@@ -192,8 +185,8 @@ export default function OnboardingPage() {
                     className="w-4 h-4"
                   />
                   <div>
-                    <p className="font-medium">Based on income</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-primary">Based on income</p>
+                    <p className="text-sm text-secondary">
                       Split proportional to monthly earnings
                     </p>
                   </div>
@@ -219,32 +212,27 @@ export default function OnboardingPage() {
             <>
               <div>
                 <h2 className="text-2xl font-bold mb-1">Invite your partner</h2>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-secondary">
                   Step 3 of 3: Complete setup
                 </p>
               </div>
 
               <Field
-                label="Partner's email"
+                label="Partner's email (optional)"
                 type="email"
                 name="partnerEmail"
                 value={formData.partnerEmail}
                 onChange={handleInputChange}
                 placeholder="partner@example.com"
-                required
               />
 
-              <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-                We'll send them an invitation link to join your household
-              </p>
+              <Alert variant="info">
+                Optional — you can invite your partner later from the space details
+              </Alert>
             </>
           )}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          {error && <Alert variant="error">{error}</Alert>}
 
           {/* Buttons */}
           <div className="flex gap-3">
@@ -267,7 +255,7 @@ export default function OnboardingPage() {
               {loading
                 ? "Creating..."
                 : step === 3
-                  ? "Create Household"
+                  ? "Create Space"
                   : "Next"}
             </Button>
           </div>

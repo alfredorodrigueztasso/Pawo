@@ -1,15 +1,24 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import {
-  Household,
-  HouseholdMember,
+  Space,
+  SpaceMember,
   Cycle,
   Expense,
   Invitation,
   Review,
 } from "@/types";
 
-// Households
-export async function createHousehold(
+// Profiles
+export async function getProfile(client: SupabaseClient, userId: string) {
+  return client
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", userId)
+    .maybeSingle();
+}
+
+// Spaces
+export async function createSpace(
   client: SupabaseClient,
   data: {
     name: string;
@@ -19,54 +28,41 @@ export async function createHousehold(
     split_mode: "income" | "manual";
   }
 ) {
-  return client.from("households").insert([data]).select().single();
+  return client.from("spaces").insert([data]).select().single();
 }
 
-export async function getHouseholdsByUser(
+export async function getSpaceWithMembers(
   client: SupabaseClient,
-  userId: string
+  spaceId: string
 ) {
   return client
-    .from("households")
-    .select("*, household_members(*)")
-    .or(
-      `created_by.eq.${userId},household_members.user_id.eq.${userId}`,
-      { referencedTable: "households" }
-    );
-}
-
-export async function getHouseholdWithMembers(
-  client: SupabaseClient,
-  householdId: string
-) {
-  return client
-    .from("households")
-    .select("*, household_members(*)")
-    .eq("id", householdId)
+    .from("spaces")
+    .select("*, space_members(*)")
+    .eq("id", spaceId)
     .single();
 }
 
-// Household Members
-export async function addHouseholdMember(
+// Space Members
+export async function addSpaceMember(
   client: SupabaseClient,
   data: {
-    household_id: string;
+    space_id: string;
     user_id: string;
     name: string;
     split_percentage: number;
     role: "owner" | "member";
   }
 ) {
-  return client.from("household_members").insert([data]).select().single();
+  return client.from("space_members").insert([data]).select().single();
 }
 
-export async function updateHouseholdMember(
+export async function updateSpaceMember(
   client: SupabaseClient,
   memberId: string,
-  data: Partial<HouseholdMember>
+  data: Partial<SpaceMember>
 ) {
   return client
-    .from("household_members")
+    .from("space_members")
     .update(data)
     .eq("id", memberId)
     .select()
@@ -77,7 +73,7 @@ export async function updateHouseholdMember(
 export async function createCycle(
   client: SupabaseClient,
   data: {
-    household_id: string;
+    space_id: string;
     start_date: string;
     end_date: string;
   }
@@ -91,12 +87,12 @@ export async function createCycle(
 
 export async function getActiveCycle(
   client: SupabaseClient,
-  householdId: string
+  spaceId: string
 ) {
   return client
     .from("cycles")
     .select("*")
-    .eq("household_id", householdId)
+    .eq("space_id", spaceId)
     .eq("status", "open")
     .order("start_date", { ascending: false })
     .single();
@@ -118,13 +114,13 @@ export async function closeCycle(
 
 export async function getCycleHistory(
   client: SupabaseClient,
-  householdId: string,
+  spaceId: string,
   limit: number = 12
 ) {
   return client
     .from("cycles")
     .select("*")
-    .eq("household_id", householdId)
+    .eq("space_id", spaceId)
     .eq("status", "closed")
     .order("end_date", { ascending: false })
     .limit(limit);
@@ -135,7 +131,7 @@ export async function createExpense(
   client: SupabaseClient,
   data: {
     cycle_id: string;
-    household_id: string;
+    space_id: string;
     paid_by: string;
     amount: number;
     description?: string;
@@ -180,12 +176,16 @@ export async function deleteExpense(
 export async function createInvitation(
   client: SupabaseClient,
   data: {
-    household_id: string;
+    space_id: string;
     email: string;
     token: string;
   }
 ) {
-  return client.from("invitations").insert([data]).select().single();
+  return client
+    .from("invitations")
+    .insert([{ ...data, status: "pending" }])
+    .select()
+    .single();
 }
 
 export async function getInvitationByToken(
@@ -194,7 +194,7 @@ export async function getInvitationByToken(
 ) {
   return client
     .from("invitations")
-    .select("*, households(*)")
+    .select("*, spaces(*)")
     .eq("token", token)
     .eq("status", "pending")
     .single();

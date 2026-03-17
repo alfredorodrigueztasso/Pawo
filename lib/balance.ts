@@ -58,6 +58,21 @@ export function calculateBalance(
   };
 }
 
+export interface SoloBalance {
+  totalSpent: number;
+}
+
+export function calculateSoloBalance(
+  expenses: Expense[],
+  member: Member
+): SoloBalance {
+  const totalSpent = expenses
+    .filter((e) => e.paid_by === member.user_id)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  return { totalSpent };
+}
+
 export function suggestSplit(incomeA: number, incomeB: number) {
   const total = incomeA + incomeB;
   if (total === 0) return { percentA: 50, percentB: 50 };

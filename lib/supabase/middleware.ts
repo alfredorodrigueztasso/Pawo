@@ -27,10 +27,11 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthPage = request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup";
+  const isAuthPage = request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup" || request.nextUrl.pathname === "/forgot-password" || request.nextUrl.pathname === "/reset-password";
   const isInvitePage = request.nextUrl.pathname.startsWith("/invite");
+  const isAuthCallback = request.nextUrl.pathname === "/auth/callback";
 
-  if (!user && !isAuthPage && !isInvitePage && request.nextUrl.pathname !== "/") {
+  if (!user && !isAuthPage && !isInvitePage && !isAuthCallback) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -38,7 +39,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/home";
+    url.pathname = "/spaces";
     return NextResponse.redirect(url);
   }
 

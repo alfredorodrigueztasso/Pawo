@@ -1,4 +1,4 @@
-import { Card } from "@orion-ds/react";
+import { Card } from "@orion-ds/react/client";
 import { createClient } from "@/lib/supabase/server";
 import { ActivityFeed } from "./ActivityFeed";
 
@@ -17,10 +17,10 @@ export default async function NotificationsPage() {
     return <div className="p-8 text-center">Not authenticated</div>;
   }
 
-  // Get user's household
+  // Get user's space
   const { data: memberData } = await supabase
-    .from("household_members")
-    .select("household_id")
+    .from("space_members")
+    .select("space_id")
     .eq("user_id", user.id)
     .single();
 
@@ -28,19 +28,19 @@ export default async function NotificationsPage() {
     return (
       <div className="p-8">
         <Card className="p-8 text-center">
-          <p className="text-gray-600">No household found</p>
+          <p className="text-secondary">No space found</p>
         </Card>
       </div>
     );
   }
 
-  const householdId = memberData.household_id;
+  const spaceId = memberData.space_id;
 
-  // Get recent expenses in the household
+  // Get recent expenses in the space
   const { data: expenses } = await supabase
     .from("expenses")
     .select("id, description, amount, paid_by, created_at")
-    .eq("household_id", householdId)
+    .eq("space_id", spaceId)
     .order("created_at", { ascending: false })
     .limit(20);
 
@@ -57,19 +57,19 @@ export default async function NotificationsPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  // Get household members for name lookup
+  // Get space members for name lookup
   const { data: members } = await supabase
-    .from("household_members")
+    .from("space_members")
     .select("user_id, name")
-    .eq("household_id", householdId);
+    .eq("space_id", spaceId);
 
   const memberMap = new Map(members?.map((m) => [m.user_id, m.name]) || []);
 
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Notifications</h1>
-        <p className="text-gray-600">Activity in your household</p>
+        <h1 className="text-4xl font-bold mb-2 text-primary">Notifications</h1>
+        <p className="text-secondary">Activity in your space</p>
       </div>
 
       <ActivityFeed
@@ -77,7 +77,7 @@ export default async function NotificationsPage() {
         reviews={reviews || []}
         memberMap={memberMap}
         currentUserId={user.id}
-        householdId={householdId}
+        spaceId={spaceId}
       />
     </div>
   );

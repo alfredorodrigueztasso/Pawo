@@ -1,4 +1,4 @@
-export interface Household {
+export interface Space {
   id: string;
   name: string;
   created_by: string;
@@ -9,9 +9,9 @@ export interface Household {
   updated_at: string;
 }
 
-export interface HouseholdMember {
+export interface SpaceMember {
   id: string;
-  household_id: string;
+  space_id: string;
   user_id: string;
   name: string;
   monthly_income?: number;
@@ -22,7 +22,7 @@ export interface HouseholdMember {
 
 export interface Cycle {
   id: string;
-  household_id: string;
+  space_id: string;
   start_date: string;
   end_date: string;
   status: 'open' | 'closed';
@@ -35,7 +35,7 @@ export interface Cycle {
 export interface Expense {
   id: string;
   cycle_id: string;
-  household_id: string;
+  space_id: string;
   paid_by: string;
   amount: number;
   description?: string;
@@ -49,7 +49,7 @@ export interface Expense {
 
 export interface Invitation {
   id: string;
-  household_id: string;
+  space_id: string;
   email: string;
   token: string;
   status: 'pending' | 'accepted' | 'expired';

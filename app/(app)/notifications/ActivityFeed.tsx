@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@orion-ds/react";
+import { Card } from "@orion-ds/react/client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -31,7 +31,7 @@ interface ActivityFeedProps {
   }>;
   memberMap: Map<string, string>;
   currentUserId: string;
-  householdId: string;
+  spaceId: string;
 }
 
 export function ActivityFeed({
@@ -39,7 +39,7 @@ export function ActivityFeed({
   reviews,
   memberMap,
   currentUserId,
-  householdId,
+  spaceId,
 }: ActivityFeedProps) {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -95,14 +95,14 @@ export function ActivityFeed({
 
     // Subscribe to expense changes
     const expenseSub = supabase
-      .channel(`household-${householdId}-expenses`)
+      .channel(`space-${spaceId}-expenses`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "expenses",
-          filter: `household_id=eq.${householdId}`,
+          filter: `space_id=eq.${spaceId}`,
         },
         (payload) => {
           const newExpense = payload.new as any;
@@ -122,7 +122,7 @@ export function ActivityFeed({
 
     // Subscribe to review changes
     const reviewSub = supabase
-      .channel(`household-${householdId}-reviews`)
+      .channel(`space-${spaceId}-reviews`)
       .on(
         "postgres_changes",
         {
@@ -152,13 +152,13 @@ export function ActivityFeed({
       supabase.removeChannel(expenseSub);
       supabase.removeChannel(reviewSub);
     };
-  }, [expenses, reviews, memberMap, householdId]);
+  }, [expenses, reviews, memberMap, spaceId]);
 
   if (events.length === 0) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-gray-600 mb-4">No activity yet</p>
-        <p className="text-sm text-gray-500">
+        <p className="text-secondary mb-4">No activity yet</p>
+        <p className="text-sm text-tertiary">
           You'll see updates here when your partner adds expenses or makes changes
         </p>
       </Card>
@@ -181,13 +181,13 @@ export function ActivityFeed({
   const getEventColor = (type: string) => {
     switch (type) {
       case "expense_added":
-        return "border-l-4 border-blue-500 bg-blue-50";
+        return "border-l-4 border-brand bg-surface-subtle";
       case "review_requested":
-        return "border-l-4 border-amber-500 bg-amber-50";
+        return "border-l-4 border-amber-500 bg-surface-subtle";
       case "review_resolved":
-        return "border-l-4 border-green-500 bg-green-50";
+        return "border-l-4 border-green-500 bg-surface-subtle";
       default:
-        return "border-l-4 border-gray-500 bg-gray-50";
+        return "border-l-4 border-border-subtle bg-surface-subtle";
     }
   };
 
@@ -215,16 +215,16 @@ export function ActivityFeed({
                 </span>
 
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-primary">
                     {event.actor}{" "}
-                    <span className="font-normal text-gray-600">
+                    <span className="font-normal text-secondary">
                       {event.description}
                     </span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">{timeStr}</p>
+                  <p className="text-xs text-tertiary mt-1">{timeStr}</p>
                 </div>
 
-                <span className="text-xs text-gray-400 flex-shrink-0">
+                <span className="text-xs text-tertiary flex-shrink-0">
                   →
                 </span>
               </div>
@@ -234,7 +234,7 @@ export function ActivityFeed({
       })}
 
       {isSubscribed && (
-        <div className="text-xs text-green-600 text-center mt-4">
+        <div className="text-xs text-brand text-center mt-4">
           ✓ Real-time updates enabled
         </div>
       )}

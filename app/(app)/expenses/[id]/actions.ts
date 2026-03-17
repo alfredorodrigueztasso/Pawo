@@ -44,7 +44,7 @@ export async function requestReviewAction({
 
     // Get payer (partner) details
     const { data: payer } = await supabase
-      .from("household_members")
+      .from("space_members")
       .select("*")
       .eq("user_id", expense.paid_by)
       .single();
@@ -149,7 +149,7 @@ export async function respondToReviewAction({
 
     // Get requester details for email
     const { data: requester } = await supabase
-      .from("household_members")
+      .from("space_members")
       .select("*")
       .eq("user_id", review.requested_by)
       .single();

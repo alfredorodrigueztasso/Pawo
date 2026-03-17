@@ -20,12 +20,12 @@ function getResendClient(): Resend {
 export async function sendInvitationEmail({
   recipientEmail,
   senderName,
-  householdName,
+  spaceName,
   invitationToken,
 }: {
   recipientEmail: string;
   senderName: string;
-  householdName: string;
+  spaceName: string;
   invitationToken: string;
 }) {
   const invitationLink = `${APP_URL}/invite/${invitationToken}`;
@@ -33,11 +33,11 @@ export async function sendInvitationEmail({
   return getResendClient().emails.send({
     from: FROM_EMAIL,
     to: recipientEmail,
-    subject: `${senderName} invited you to share expenses in ${householdName}`,
+    subject: `${senderName} invited you to share expenses in ${spaceName}`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>You're invited to Pawo! 🎉</h2>
-        <p>${senderName} invited you to join <strong>${householdName}</strong> on Pawo to divide shared expenses fairly.</p>
+        <p>${senderName} invited you to join <strong>${spaceName}</strong> on Pawo to divide shared expenses fairly.</p>
 
         <div style="background-color: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 0 0 15px 0;">Accept the invitation and get started:</p>
@@ -64,14 +64,14 @@ export async function sendExpenseNotificationEmail({
   senderName,
   amount,
   description,
-  householdName,
+  spaceName,
 }: {
   recipientEmail: string;
   recipientName: string;
   senderName: string;
   amount: number;
   description: string;
-  householdName: string;
+  spaceName: string;
 }) {
   return getResendClient().emails.send({
     from: FROM_EMAIL,
@@ -79,7 +79,7 @@ export async function sendExpenseNotificationEmail({
     subject: `${senderName} added an expense: ${description}`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2>New expense in ${householdName}</h2>
+        <h2>New expense in ${spaceName}</h2>
         <p>Hi ${recipientName},</p>
         <p>${senderName} just added a new expense:</p>
 
@@ -93,7 +93,7 @@ export async function sendExpenseNotificationEmail({
         </p>
 
         <p style="color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
-          You're receiving this because you're part of the ${householdName} household on Pawo.
+          You're receiving this because you're part of the ${spaceName} household on Pawo.
         </p>
       </div>
     `,

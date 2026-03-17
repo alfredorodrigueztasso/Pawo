@@ -1,50 +1,46 @@
 "use client";
 
-import { Card, Button, Alert, Badge } from "@orion-ds/react";
+import { Card, Button, Alert, Badge } from "@orion-ds/react/client";
 import { useState } from "react";
 import { closeCycleAction } from "./actions";
-import type { Cycle, Expense, HouseholdMember } from "@/types";
-import { calculateBalance } from "@/lib/balance";
+import { formatCurrency } from "@/lib/currency";
+import type { Cycle, Expense, SpaceMember } from "@/types";
+import { calculateBalance, calculateSoloBalance } from "@/lib/balance";
 
 interface CloseCycleModalProps {
   cycle: Cycle;
   expenses: Expense[];
-  members: HouseholdMember[];
-  householdId: string;
+  members: SpaceMember[];
+  spaceId: string;
+  currency: string;
 }
 
 export function CloseCycleModal({
   cycle,
   expenses,
   members,
-  householdId,
+  spaceId,
+  currency,
 }: CloseCycleModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (members.length !== 2) {
-    return (
-      <Card className="p-6 border-l-4 border-amber-500">
-        <p className="text-sm text-amber-700">
-          Both members must be present to close the cycle
-        </p>
-      </Card>
-    );
-  }
-
-  const balance = calculateBalance(
-    expenses,
-    members as [HouseholdMember, HouseholdMember]
-  );
+  const isReady = members.length === 2;
 
   const handleClose = async () => {
     setError(null);
     setLoading(true);
 
-    const result = await closeCycleAction({
-      cycleId: cycle.id,
-      householdId: householdId,
-      summary: {
+    let summary;
+
+    if (isReady) {
+      // Paired mode: full balance calculation
+      const balance = calculateBalance(
+        expenses,
+        members as [SpaceMember, SpaceMember]
+      );
+
+      summary = {
         totalExpenses: balance.totalExpenses,
         memberAPaid: balance.totalPaidByA,
         memberBPaid: balance.totalPaidByB,
@@ -53,7 +49,21 @@ export function CloseCycleModal({
           balance.adjustmentA > 0
             ? `${balance.memberBName} → ${balance.memberAName}`
             : `${balance.memberAName} → ${balance.memberBName}`,
-      },
+      };
+    } else {
+      // Solo mode: simple summary with solo member's total
+      const soloBalance = calculateSoloBalance(expenses, members[0]);
+      summary = {
+        totalExpenses: soloBalance.totalSpent,
+        memberAPaid: soloBalance.totalSpent,
+        soloMode: true,
+      };
+    }
+
+    const result = await closeCycleAction({
+      cycleId: cycle.id,
+      spaceId: spaceId,
+      summary,
     });
 
     if (result?.error) {
@@ -65,47 +75,101 @@ export function CloseCycleModal({
   };
 
   return (
-    <Card className="p-8 border-2 border-blue-200 bg-blue-50">
+    <Card className="p-8">
       <div className="space-y-6">
         <div>
           <h3 className="text-2xl font-bold mb-2">Close this cycle?</h3>
-          <p className="text-gray-600">
+          <p className="text-secondary">
             This will archive all expenses and start a new cycle
           </p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 space-y-3">
-          <div className="flex justify-between">
-            <span className="text-gray-600">Total expenses:</span>
-            <span className="font-semibold">
-              ${balance.totalExpenses.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">{balance.memberAName} paid:</span>
-            <span className="font-semibold">
-              ${balance.totalPaidByA.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600">{balance.memberBName} paid:</span>
-            <span className="font-semibold">
-              ${balance.totalPaidByB.toFixed(2)}
-            </span>
-          </div>
-          <div className="border-t pt-3 flex justify-between">
-            <span className="font-medium text-gray-900">Final adjustment:</span>
-            <span className="font-bold text-blue-600">
-              ${Math.abs(balance.adjustmentA).toFixed(2)}
-            </span>
-          </div>
-        </div>
+        {isReady ? (
+          // Paired mode: show full balance
+          <>
+            <div className="bg-surface-layer rounded-lg p-4 space-y-3">
+              <div className="flex justify-between">
+                <span className="text-secondary">Total expenses:</span>
+                <span className="font-semibold text-primary">
+                  {formatCurrency(
+                    expenses.reduce((sum, e) => sum + e.amount, 0),
+                    currency
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary">{members[0].name} paid:</span>
+                <span className="font-semibold text-primary">
+                  {formatCurrency(
+                    expenses
+                      .filter((e) => e.paid_by === members[0].user_id)
+                      .reduce((sum, e) => sum + e.amount, 0),
+                    currency
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-secondary">{members[1].name} paid:</span>
+                <span className="font-semibold text-primary">
+                  {formatCurrency(
+                    expenses
+                      .filter((e) => e.paid_by === members[1].user_id)
+                      .reduce((sum, e) => sum + e.amount, 0),
+                    currency
+                  )}
+                </span>
+              </div>
+              <div className="border-t border-border-subtle pt-3 flex justify-between">
+                <span className="font-medium text-primary">Final adjustment:</span>
+                <span className="font-bold text-brand">
+                  {(() => {
+                    const balance = calculateBalance(
+                      expenses,
+                      members as [SpaceMember, SpaceMember]
+                    );
+                    return formatCurrency(Math.abs(balance.adjustmentA), currency);
+                  })()}
+                </span>
+              </div>
+            </div>
 
-        <Alert variant="info">
-          {balance.adjustmentA > 0
-            ? `${balance.memberBName} should transfer $${Math.abs(balance.adjustmentA).toFixed(2)} to ${balance.memberAName}`
-            : `${balance.memberAName} should transfer $${Math.abs(balance.adjustmentA).toFixed(2)} to ${balance.memberBName}`}
-        </Alert>
+            <Alert variant="info">
+              {(() => {
+                const balance = calculateBalance(
+                  expenses,
+                  members as [SpaceMember, SpaceMember]
+                );
+                return balance.adjustmentA > 0
+                  ? `${members[1].name} should transfer ${formatCurrency(Math.abs(balance.adjustmentA), currency)} to ${members[0].name}`
+                  : `${members[0].name} should transfer ${formatCurrency(Math.abs(balance.adjustmentA), currency)} to ${members[1].name}`;
+              })()}
+            </Alert>
+          </>
+        ) : (
+          // Solo mode: show simple summary
+          <div className="bg-surface-layer rounded-lg p-4 space-y-3">
+            <div className="flex justify-between">
+              <span className="text-secondary">Total expenses:</span>
+              <span className="font-semibold text-primary">
+                {formatCurrency(
+                  expenses.reduce((sum, e) => sum + e.amount, 0),
+                  currency
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-secondary">{members[0].name} paid:</span>
+              <span className="font-semibold text-primary">
+                {formatCurrency(
+                  expenses
+                    .filter((e) => e.paid_by === members[0].user_id)
+                    .reduce((sum, e) => sum + e.amount, 0),
+                  currency
+                )}
+              </span>
+            </div>
+          </div>
+        )}
 
         {error && <Alert variant="error">{error}</Alert>}
 

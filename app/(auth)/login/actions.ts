@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 export async function loginAction(formData: FormData) {
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
+  const inviteToken = formData.get("inviteToken")?.toString();
 
   if (!email || !password) {
     return { error: "Email and password are required" };
@@ -22,6 +23,9 @@ export async function loginAction(formData: FormData) {
     return { error: error.message };
   }
 
-  // Success - redirect to home
-  redirect("/home");
+  // Success - redirect to invite page if token present, otherwise to spaces
+  if (inviteToken) {
+    redirect(`/invite/${inviteToken}`);
+  }
+  redirect("/spaces");
 }

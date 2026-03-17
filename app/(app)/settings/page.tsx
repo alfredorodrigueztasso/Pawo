@@ -1,4 +1,5 @@
-import { Card, Field, Button } from "@orion-ds/react";
+import { Card, Field, Button } from "@orion-ds/react/client";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { UpdateIncomeForm } from "./UpdateIncomeForm";
 import { MembersList } from "./MembersList";
@@ -18,10 +19,10 @@ export default async function SettingsPage() {
     return <div className="p-8 text-center">Not authenticated</div>;
   }
 
-  // Get user's household
+  // Get user's space
   const { data: memberData } = await supabase
-    .from("household_members")
-    .select("household_id, monthly_income, split_percentage")
+    .from("space_members")
+    .select("space_id, monthly_income, split_percentage")
     .eq("user_id", user.id)
     .single();
 
@@ -29,68 +30,67 @@ export default async function SettingsPage() {
     return (
       <div className="p-8">
         <Card className="p-8 text-center">
-          <p className="text-gray-600">No household found</p>
+          <p className="text-secondary">No space found</p>
         </Card>
       </div>
     );
   }
 
-  const householdId = memberData.household_id;
+  const spaceId = memberData.space_id;
 
-  // Get household details
-  const { data: household } = await supabase
-    .from("households")
+  // Get space details
+  const { data: space } = await supabase
+    .from("spaces")
     .select("*")
-    .eq("id", householdId)
+    .eq("id", spaceId)
     .single();
 
-  // Get all household members
+  // Get all space members
   const { data: members } = await supabase
-    .from("household_members")
+    .from("space_members")
     .select("*")
-    .eq("household_id", householdId);
+    .eq("space_id", spaceId);
 
-  // Get member emails
+  // Member emails disabled for now - requires SUPABASE_SERVICE_ROLE_KEY
   const memberEmails: Record<string, string> = {};
-  if (members) {
-    for (const member of members) {
-      const { data: auth } = await supabase.auth.admin.getUserById(
-        member.user_id
-      );
-      if (auth?.user?.email) {
-        memberEmails[member.user_id] = auth.user.email;
-      }
-    }
-  }
 
-  const splitMode = household?.split_mode || "manual";
+  const splitMode = space?.split_mode || "manual";
   const isIncomeMode = splitMode === "income";
 
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Settings</h1>
-        <p className="text-gray-600">Manage your household configuration</p>
+        <h1 className="text-4xl font-bold mb-2 text-primary">Settings</h1>
+        <p className="text-secondary">Manage your space configuration</p>
       </div>
 
-      {/* Household Settings */}
+      {/* Profile Settings */}
       <Card className="p-8">
-        <h2 className="text-2xl font-bold mb-6">Household</h2>
+        <h2 className="text-2xl font-bold mb-4 text-primary">Profile</h2>
+        <p className="text-secondary mb-6">Manage your account information</p>
+        <Link href="/settings/profile">
+          <Button variant="primary">Edit Profile</Button>
+        </Link>
+      </Card>
+
+      {/* Space Settings */}
+      <Card className="p-8">
+        <h2 className="text-2xl font-bold mb-6 text-primary">Space</h2>
         <form className="space-y-4">
           <Field
-            label="Household name"
-            defaultValue={household?.name}
+            label="Space name"
+            defaultValue={space?.name}
             disabled
           />
           <Field
             label="Currency"
-            defaultValue={household?.currency}
+            defaultValue={space?.currency}
             disabled
           />
           <Field
             label="Cycle start day"
             type="number"
-            defaultValue={String(household?.cycle_start_day)}
+            defaultValue={String(space?.cycle_start_day)}
             disabled
           />
           <Field
@@ -104,7 +104,7 @@ export default async function SettingsPage() {
       {/* Split Settings - Only show if income mode */}
       {isIncomeMode && (
         <UpdateIncomeForm
-          householdId={householdId}
+          spaceId={spaceId}
           userId={user.id}
           currentIncome={memberData.monthly_income}
           splitMode={splitMode}
@@ -116,7 +116,7 @@ export default async function SettingsPage() {
         members={members || []}
         memberEmails={memberEmails}
         currentUserId={user.id}
-        householdId={householdId}
+        spaceId={spaceId}
       />
     </div>
   );

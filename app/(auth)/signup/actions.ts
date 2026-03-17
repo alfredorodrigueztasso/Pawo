@@ -8,6 +8,7 @@ export async function signupAction(formData: FormData) {
   const password = formData.get("password")?.toString();
   const name = formData.get("name")?.toString();
   const confirmPassword = formData.get("confirmPassword")?.toString();
+  const inviteToken = formData.get("inviteToken")?.toString();
 
   if (!email || !password || !name || !confirmPassword) {
     return { error: "All fields are required" };
@@ -26,12 +27,18 @@ export async function signupAction(formData: FormData) {
   const { error: authError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: { name },
+    },
   });
 
   if (authError) {
     return { error: authError.message };
   }
 
-  // Success - redirect to onboarding
-  redirect("/onboarding");
+  // Success - redirect to invite page if token present, otherwise to home
+  if (inviteToken) {
+    redirect(`/invite/${inviteToken}`);
+  }
+  redirect("/home");
 }

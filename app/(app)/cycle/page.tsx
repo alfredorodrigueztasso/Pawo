@@ -1,7 +1,8 @@
-import { Card } from "@orion-ds/react";
+import { Card, Alert } from "@orion-ds/react/client";
 import { createClient } from "@/lib/supabase/server";
 import { CloseCycleModal } from "./CloseCycleModal";
 import { formatCyclePeriod, getCurrentCycleProgress } from "@/lib/cycle";
+import { formatCurrency } from "@/lib/currency";
 
 export const metadata = {
   title: "Cycle — Pawo",
@@ -18,59 +19,55 @@ export default async function CyclePage() {
     return <div className="p-8 text-center">Not authenticated</div>;
   }
 
-  // Get active household
-  const householdResult = await supabase
-    .from("household_members")
-    .select("household_id")
+  // Get active space
+  const spaceResult = await supabase
+    .from("space_members")
+    .select("space_id")
     .eq("user_id", user.id)
     .single();
 
-  if (!householdResult.data) {
+  if (!spaceResult.data) {
     return (
       <div className="p-8">
-        <Card className="p-8 text-center">
-          <p className="text-gray-600">No household found</p>
-        </Card>
+        <Alert variant="warning">No space found</Alert>
       </div>
     );
   }
 
-  const householdId = householdResult.data.household_id;
+  const spaceId = spaceResult.data.space_id;
 
   // Get active cycle
-  const [cycleResult, householdResult2, expensesResult] = await Promise.all([
+  const [cycleResult, spaceResult2, expensesResult] = await Promise.all([
     supabase
       .from("cycles")
       .select("*")
-      .eq("household_id", householdId)
+      .eq("space_id", spaceId)
       .eq("status", "open")
       .order("start_date", { ascending: false })
       .limit(1)
       .single(),
     supabase
-      .from("households")
-      .select("*, household_members(*)")
-      .eq("id", householdId)
+      .from("spaces")
+      .select("*, space_members(*)")
+      .eq("id", spaceId)
       .single(),
     supabase.from("expenses").select("*"),
   ]);
 
   const cycle = cycleResult.data;
-  const household = householdResult2.data;
+  const space = spaceResult2.data;
   const allExpenses = expensesResult.data || [];
 
   if (!cycle) {
     return (
       <div className="p-8">
-        <Card className="p-8 text-center">
-          <p className="text-gray-600">No active cycle</p>
-        </Card>
+        <Alert variant="warning">No active cycle</Alert>
       </div>
     );
   }
 
   const cycleExpenses = allExpenses.filter((e) => e.cycle_id === cycle.id);
-  const members = household?.household_members || [];
+  const members = space?.space_members || [];
   const progress = getCurrentCycleProgress(
     new Date(cycle.start_date),
     new Date(cycle.end_date)
@@ -79,16 +76,16 @@ export default async function CyclePage() {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Current Cycle</h1>
-        <p className="text-gray-600">Manage and close your expense cycles</p>
+        <h1 className="text-4xl font-bold mb-2 text-primary">Current Cycle</h1>
+        <p className="text-secondary">Manage and close your expense cycles</p>
       </div>
 
       {/* Cycle Progress */}
       <Card className="p-8">
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-gray-600 mb-2">Period</p>
-            <p className="text-lg font-semibold">
+            <p className="text-sm text-secondary mb-2">Period</p>
+            <p className="text-lg font-semibold text-primary">
               {formatCyclePeriod(
                 new Date(cycle.start_date),
                 new Date(cycle.end_date)
@@ -96,30 +93,31 @@ export default async function CyclePage() {
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600 mb-2">Progress</p>
-            <div className="w-full bg-gray-200 rounded-full h-3">
+            <p className="text-sm text-secondary mb-2">Progress</p>
+            <div className="w-full bg-surface-subtle rounded-full h-3">
               <div
-                className="bg-blue-600 h-3 rounded-full transition-all"
+                className="bg-brand h-3 rounded-full transition-all"
                 style={{ width: `${Math.min(progress, 100)}%` }}
               ></div>
             </div>
-            <p className="text-sm text-gray-600 mt-2">{progress}% complete</p>
+            <p className="text-sm text-secondary mt-2">{progress}% complete</p>
           </div>
 
-          <div className="pt-4 border-t">
-            <p className="text-sm text-gray-600 mb-2">Summary</p>
+          <div className="pt-4 border-t border-border-subtle">
+            <p className="text-sm text-secondary mb-2">Summary</p>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-gray-700">Total expenses:</span>
-                <span className="font-semibold">
-                  ${cycleExpenses
-                    .reduce((sum, e) => sum + e.amount, 0)
-                    .toFixed(2)}
+                <span className="text-secondary">Total expenses:</span>
+                <span className="font-semibold text-primary">
+                  {formatCurrency(
+                    cycleExpenses.reduce((sum, e) => sum + e.amount, 0),
+                    space?.currency || "CLP"
+                  )}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-700">Entries:</span>
-                <span className="font-semibold">{cycleExpenses.length}</span>
+                <span className="text-secondary">Entries:</span>
+                <span className="font-semibold text-primary">{cycleExpenses.length}</span>
               </div>
             </div>
           </div>
@@ -131,7 +129,8 @@ export default async function CyclePage() {
         cycle={cycle}
         expenses={cycleExpenses}
         members={members}
-        householdId={householdId}
+        spaceId={spaceId}
+        currency={space?.currency || "CLP"}
       />
     </div>
   );

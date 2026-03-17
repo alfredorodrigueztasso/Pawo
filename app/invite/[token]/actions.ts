@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   getInvitationByToken,
   acceptInvitation,
-  addHouseholdMember,
+  addSpaceMember,
 } from "@/lib/supabase/queries";
 import { suggestSplit } from "@/lib/balance";
 import { redirect } from "next/navigation";
@@ -31,7 +31,7 @@ export async function acceptInvitationAction(token: string, data: {
     }
 
     const invitation = inviteResult.data;
-    const household = invitation.households;
+    const space = invitation.spaces;
 
     // Accept invitation
     await acceptInvitation(supabase, invitation.id);
@@ -39,11 +39,11 @@ export async function acceptInvitationAction(token: string, data: {
     // Get existing member to calculate split based on income if needed
     let splitPercentage = 50;
 
-    if (household.split_mode === "income") {
+    if (space.split_mode === "income") {
       const membersResult = await supabase
-        .from("household_members")
+        .from("space_members")
         .select("monthly_income, split_percentage")
-        .eq("household_id", household.id)
+        .eq("space_id", space.id)
         .single();
 
       if (membersResult.data?.monthly_income && data.income) {
@@ -56,15 +56,15 @@ export async function acceptInvitationAction(token: string, data: {
     }
 
     // Add user as member
-    await addHouseholdMember(supabase, {
-      household_id: household.id,
+    await addSpaceMember(supabase, {
+      space_id: space.id,
       user_id: user.id,
       name: user.user_metadata?.name || user.email?.split("@")[0] || "Partner",
       split_percentage: splitPercentage,
       role: "member",
     });
 
-    return { success: true, householdId: household.id };
+    return { success: true, spaceId: space.id };
   } catch (err) {
     console.error("Accept invitation error:", err);
     return { error: "An unexpected error occurred" };

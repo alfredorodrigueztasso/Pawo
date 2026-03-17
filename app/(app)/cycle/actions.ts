@@ -6,7 +6,7 @@ import { getNextCycleStartDate, getNextCycleEndDate } from "@/lib/cycle";
 
 export async function closeCycleAction(data: {
   cycleId: string;
-  householdId: string;
+  spaceId: string;
   summary: Record<string, unknown>;
 }) {
   try {
@@ -26,23 +26,23 @@ export async function closeCycleAction(data: {
     // Create new cycle
     const now = new Date();
 
-    // Get household to know cycle start day
-    const householdResult = await supabase
-      .from("households")
+    // Get space to know cycle start day
+    const spaceResult = await supabase
+      .from("spaces")
       .select("cycle_start_day")
-      .eq("id", data.householdId)
+      .eq("id", data.spaceId)
       .single();
 
-    if (!householdResult.data) {
-      return { error: "Household not found" };
+    if (!spaceResult.data) {
+      return { error: "Space not found" };
     }
 
-    const cycleStartDay = householdResult.data.cycle_start_day;
+    const cycleStartDay = spaceResult.data.cycle_start_day;
     const nextStart = getNextCycleStartDate(cycleStartDay, now);
     const nextEnd = getNextCycleEndDate(cycleStartDay, now);
 
     const newCycleResult = await createCycle(supabase, {
-      household_id: data.householdId,
+      space_id: data.spaceId,
       start_date: nextStart.toISOString().split("T")[0],
       end_date: nextEnd.toISOString().split("T")[0],
     });
