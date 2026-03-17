@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, Badge, Button, useDisclosure, ToggleGroup } from "@orion-ds/react/client";
+import { Card, Badge, Button, useDisclosure, Tabs } from "@orion-ds/react/client";
+import type { TabItem } from "@orion-ds/react/client";
 import Link from "next/link";
 import type { Expense, SpaceMember } from "@/types";
 import { ExpenseOptionsMenu } from "./ExpenseOptionsMenu";
@@ -76,6 +77,44 @@ function ExpenseRow({
   );
 }
 
+function ExpenseListContent({
+  filteredExpenses,
+  members,
+  spaceId,
+  currency,
+  getMemberName,
+  formatDate,
+}: {
+  filteredExpenses: Expense[];
+  members: SpaceMember[];
+  spaceId: string;
+  currency: string;
+  getMemberName: (userId: string) => string;
+  formatDate: (date: string) => string;
+}) {
+  return (
+    <div className="stack stack-gap-2">
+      {filteredExpenses.length === 0 ? (
+        <Card className="p-6 text-center text-secondary">
+          No expenses for this filter
+        </Card>
+      ) : (
+        filteredExpenses.map((expense) => (
+          <ExpenseRow
+            key={expense.id}
+            expense={expense}
+            members={members}
+            spaceId={spaceId}
+            currency={currency}
+            getMemberName={getMemberName}
+            formatDate={formatDate}
+          />
+        ))
+      )}
+    </div>
+  );
+}
+
 export function ExpensesList({
   expenses,
   members,
@@ -84,8 +123,6 @@ export function ExpensesList({
   currency,
   currentUserId,
 }: ExpensesListProps) {
-  const [selectedTab, setSelectedTab] = useState<string>("all");
-
   const getMemberName = (userId: string) => {
     return members.find((m) => m.user_id === userId)?.name || "Unknown";
   };
@@ -97,7 +134,7 @@ export function ExpensesList({
     });
   };
 
-  // Calculate totals per member
+  // Calculate totals and counts per member
   const totals = useMemo(() => {
     const result: Record<string, number> = {};
     expenses.forEach((exp) => {
@@ -106,11 +143,13 @@ export function ExpensesList({
     return result;
   }, [expenses]);
 
-  // Filter expenses based on selected filter
-  const filteredExpenses = useMemo(() => {
-    if (selectedTab === "all") return expenses;
-    return expenses.filter((exp) => exp.paid_by === selectedTab);
-  }, [expenses, selectedTab]);
+  const memberCounts = useMemo(() => {
+    const result: Record<string, number> = {};
+    expenses.forEach((exp) => {
+      result[exp.paid_by] = (result[exp.paid_by] || 0) + 1;
+    });
+    return result;
+  }, [expenses]);
 
   if (expenses.length === 0) {
     return (
@@ -126,39 +165,54 @@ export function ExpensesList({
     );
   }
 
+  // Build tabs
+  const tabs: TabItem[] = [
+    {
+      id: "all",
+      label: "All",
+      badge: expenses.length,
+      content: (
+        <ExpenseListContent
+          filteredExpenses={expenses}
+          members={members}
+          spaceId={spaceId}
+          currency={currency}
+          getMemberName={getMemberName}
+          formatDate={formatDate}
+        />
+      ),
+    },
+    ...members.map((member) => ({
+      id: member.user_id,
+      label: member.user_id === currentUserId ? "Me" : member.name,
+      badge: memberCounts[member.user_id] || 0,
+      content: (
+        <ExpenseListContent
+          filteredExpenses={expenses.filter((e) => e.paid_by === member.user_id)}
+          members={members}
+          spaceId={spaceId}
+          currency={currency}
+          getMemberName={getMemberName}
+          formatDate={formatDate}
+        />
+      ),
+    })),
+  ];
+
   return (
     <div className="space-y-4">
-      {/* Filter toggle buttons */}
-      <ToggleGroup type="single" value={selectedTab} onValueChange={setSelectedTab}>
-        <ToggleGroup.Item value="all">All</ToggleGroup.Item>
-        {members.map((member) => (
-          <ToggleGroup.Item key={member.user_id} value={member.user_id}>
-            {member.user_id === currentUserId ? "Me" : member.name} ·{" "}
-            {formatCurrency(totals[member.user_id] || 0, currency)}
-          </ToggleGroup.Item>
-        ))}
-      </ToggleGroup>
-
-      {/* Expenses list */}
-      <div className="stack stack-gap-2">
-        {filteredExpenses.length === 0 ? (
-          <Card className="p-6 text-center text-secondary">
-            No expenses for this filter
-          </Card>
-        ) : (
-          filteredExpenses.map((expense) => (
-            <ExpenseRow
-              key={expense.id}
-              expense={expense}
-              members={members}
-              spaceId={spaceId}
-              currency={currency}
-              getMemberName={getMemberName}
-              formatDate={formatDate}
-            />
-          ))
-        )}
-      </div>
+      {members.length > 1 ? (
+        <Tabs tabs={tabs} defaultTab="all" noPanelPadding />
+      ) : (
+        <ExpenseListContent
+          filteredExpenses={expenses}
+          members={members}
+          spaceId={spaceId}
+          currency={currency}
+          getMemberName={getMemberName}
+          formatDate={formatDate}
+        />
+      )}
     </div>
   );
 }

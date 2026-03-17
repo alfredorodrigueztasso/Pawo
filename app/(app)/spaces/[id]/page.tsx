@@ -1,13 +1,14 @@
-import { Card, Button, Alert } from "@orion-ds/react/client";
+import { MetricCards, Card, Button, Alert } from "@orion-ds/react/client";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { ExpensesList } from "../../expenses/ExpensesList";
 import { AddExpenseModal } from "./AddExpenseModal";
 import { InviteModal } from "./InviteModal";
 import { SpaceOptionsMenu } from "./SpaceOptionsMenu";
+import { PastCyclesSection } from "./PastCyclesSection";
 import { calculateBalance, calculateSoloBalance } from "@/lib/balance";
 import { formatCurrency } from "@/lib/currency";
-import type { SpaceMember, Expense } from "@/types";
+import type { SpaceMember, Expense, Cycle } from "@/types";
 
 export const metadata = {
   title: "Space — Pawo",
@@ -44,15 +45,6 @@ function MemberAvatar({ name, avatarUrl }: { name: string; avatarUrl?: string })
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <Card className="p-8 text-center">
-      <p className="text-sm text-tertiary mb-3">{label}</p>
-      <p className="text-2xl font-bold text-primary">{value}</p>
-    </Card>
-  );
-}
-
 export default async function HouseholdDetailPage({
   params,
 }: {
@@ -74,8 +66,8 @@ export default async function HouseholdDetailPage({
     );
   }
 
-  // Get space with members and active cycle
-  const [spaceDetailsResult, cycleResult] = await Promise.all([
+  // Get space with members, active cycle, and past cycles
+  const [spaceDetailsResult, cycleResult, pastCyclesResult] = await Promise.all([
     supabase
       .from("spaces")
       .select("*, space_members(*)")
@@ -89,10 +81,18 @@ export default async function HouseholdDetailPage({
       .order("start_date", { ascending: false })
       .limit(1)
       .single(),
+    supabase
+      .from("cycles")
+      .select("*")
+      .eq("space_id", spaceId)
+      .eq("status", "closed")
+      .order("start_date", { ascending: false })
+      .limit(6),
   ]);
 
   const space = spaceDetailsResult.data;
   const cycle = cycleResult.data;
+  const pastCycles: Cycle[] = pastCyclesResult.data || [];
   const members: SpaceMember[] = space?.space_members || [];
 
   // Fetch profiles for member avatars
@@ -159,6 +159,11 @@ export default async function HouseholdDetailPage({
   );
   const expenseCount = cycleExpenses.length;
 
+  const totalCycleDays = Math.ceil(
+    (new Date(cycle.end_date).getTime() - new Date(cycle.start_date).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const cycleLabel = `${new Date(cycle.start_date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })} → ${new Date(cycle.end_date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}`;
+
   // Calculate balance
   let balanceDisplay = "—";
   if (isReady && cycleExpenses.length > 0) {
@@ -174,11 +179,31 @@ export default async function HouseholdDetailPage({
     } else {
       balanceDisplay = "Settled";
     }
-  } else if (!isReady && cycleExpenses.length > 0) {
-    // Solo mode: show total spent instead of balance
-    const soloBalance = calculateSoloBalance(cycleExpenses, members[0]);
-    balanceDisplay = `Total spent: ${formatCurrency(soloBalance.totalSpent, space.currency)}`;
   }
+
+  const metrics = [
+    {
+      label: "Total del ciclo",
+      value: formatCurrency(totalSpent, space.currency),
+      description: cycleLabel,
+    },
+    {
+      label: "Balance",
+      value: balanceDisplay,
+    },
+    {
+      label: "Días restantes",
+      value: daysRemaining,
+      description: `de ${totalCycleDays} días`,
+    },
+    {
+      label: "Gastos",
+      value: expenseCount,
+      description: expenseCount > 0
+        ? `Promedio ${formatCurrency(totalSpent / expenseCount, space.currency)}`
+        : undefined,
+    },
+  ];
 
   return (
     <div className="stack stack-gap-8">
@@ -216,12 +241,7 @@ export default async function HouseholdDetailPage({
         <h2 className="text-base font-semibold text-primary mb-6">
           Current cycle
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <StatCard label="Total del ciclo" value={formatCurrency(totalSpent, space.currency)} />
-          <StatCard label="Balance" value={balanceDisplay} />
-          <StatCard label="Días restantes" value={daysRemaining} />
-          <StatCard label="Gastos" value={expenseCount} />
-        </div>
+        <MetricCards metrics={metrics} columns={4} />
       </div>
 
       {/* Expenses List */}
@@ -247,6 +267,18 @@ export default async function HouseholdDetailPage({
           </Card>
         )}
       </div>
+
+      {/* Past cycles history */}
+      {pastCycles.length > 0 && (
+        <div>
+          <PastCyclesSection
+            cycles={pastCycles}
+            currency={space.currency}
+            currentUserId={user.id}
+            members={members}
+          />
+        </div>
+      )}
     </div>
   );
 }
