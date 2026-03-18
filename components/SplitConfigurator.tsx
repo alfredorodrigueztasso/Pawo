@@ -67,9 +67,6 @@ export function SplitConfigurator({
             </Card>
           </div>
 
-          {/* Helper text */}
-          <p className="text-xs text-secondary">Most couples start with 50/50</p>
-
           {/* Slider */}
           <Slider
             value={splitPercentage}
