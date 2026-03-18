@@ -27,6 +27,15 @@ body {
   --font-secondary: var(--font-inter);
 }
 
+/* Utility classes using Orion DS tokens */
+.rounded-control {
+  border-radius: var(--radius-control);
+}
+
+.rounded-container {
+  border-radius: var(--radius-container);
+}
+
 /* Force next/font to be used instead of Orion's font names */
 html[data-brand="ember"] body,
 html[data-brand="ember"] {

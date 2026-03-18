@@ -184,7 +184,7 @@ export function CreateSpaceModal() {
                     style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-4)" }}
                   >
                     <label
-                      className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-lg cursor-pointer hover:border-brand transition"
+                      className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
                       style={{
                         borderColor:
                           formData.splitMode === "manual"
@@ -209,7 +209,7 @@ export function CreateSpaceModal() {
                     </label>
 
                     <label
-                      className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-lg cursor-pointer hover:border-brand transition"
+                      className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
                       style={{
                         borderColor:
                           formData.splitMode === "income"

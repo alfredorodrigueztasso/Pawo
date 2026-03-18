@@ -75,7 +75,7 @@ export function SpaceOptionsMenu({ space }: SpaceOptionsMenuProps) {
         placement="bottom-end"
         trigger={
           <button
-            className="p-2 hover:bg-surface-subtle rounded-lg transition"
+            className="p-2 hover:bg-surface-subtle rounded-control transition"
             title="More options"
           >
             <span className="text-2xl font-bold text-secondary">⋮</span>

@@ -39,7 +39,7 @@ export function MembersList({
           return (
             <div
               key={member.id}
-              className="p-4 bg-surface-subtle rounded-lg border border-border-subtle"
+              className="p-4 bg-surface-subtle rounded-control border border-border-subtle"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">

@@ -103,7 +103,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
             </div>
 
             {invitationData.spaceName && (
-              <div className="bg-surface-layer rounded-lg p-6">
+              <div className="bg-surface-layer rounded-control p-6">
                 <p className="text-sm text-secondary mb-2">Space</p>
                 <p className="text-xl font-semibold text-brand">
                   {invitationData.spaceName}

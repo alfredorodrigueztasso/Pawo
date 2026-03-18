@@ -87,7 +87,7 @@ export function CloseCycleModal({
         {isReady ? (
           // Paired mode: show full balance
           <>
-            <div className="bg-surface-layer rounded-lg p-4 space-y-3">
+            <div className="bg-surface-layer rounded-control p-4 space-y-3">
               <div className="flex justify-between">
                 <span className="text-secondary">Total expenses:</span>
                 <span className="font-semibold text-primary">
@@ -147,7 +147,7 @@ export function CloseCycleModal({
           </>
         ) : (
           // Solo mode: show simple summary
-          <div className="bg-surface-layer rounded-lg p-4 space-y-3">
+          <div className="bg-surface-layer rounded-control p-4 space-y-3">
             <div className="flex justify-between">
               <span className="text-secondary">Total expenses:</span>
               <span className="font-semibold text-primary">

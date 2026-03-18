@@ -106,7 +106,7 @@ export function ExpenseOptionsMenu({
         placement="bottom-end"
         trigger={
           <button
-            className="p-2 hover:bg-surface-subtle rounded-lg transition"
+            className="p-2 hover:bg-surface-subtle rounded-control transition"
             title="More options"
             onClick={(e) => e.stopPropagation()}
           >

@@ -148,7 +148,7 @@ export default function OnboardingPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-lg cursor-pointer hover:border-brand transition"
+                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
                   style={{
                     borderColor:
                       formData.splitMode === "manual" ? "var(--text-brand)" : undefined,
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
                   </div>
                 </label>
 
-                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-lg cursor-pointer hover:border-brand transition"
+                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
                   style={{
                     borderColor:
                       formData.splitMode === "income" ? "var(--text-brand)" : undefined,

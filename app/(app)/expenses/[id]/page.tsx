@@ -157,13 +157,13 @@ export default async function ExpenseDetailPage({
             {paidByName} is asking about this expense
           </h3>
           <div className="space-y-4">
-            <div className="bg-surface-layer rounded-lg p-4">
+            <div className="bg-surface-layer rounded-control p-4">
               <p className="text-sm text-secondary mb-2">Their question</p>
               <p className="text-lg text-primary">{review.question}</p>
             </div>
 
             {review.suggested_amount && (
-              <div className="bg-surface-layer rounded-lg p-4">
+              <div className="bg-surface-layer rounded-control p-4">
                 <p className="text-sm text-secondary mb-2">Suggested amount</p>
                 <p className="text-xl font-semibold text-primary">
                   {formatCurrency(review.suggested_amount, currency)}
@@ -172,7 +172,7 @@ export default async function ExpenseDetailPage({
             )}
 
             {review.status === "resolved" && review.response && (
-              <div className="bg-surface-layer rounded-lg p-4 border border-border-subtle">
+              <div className="bg-surface-layer rounded-control p-4 border border-border-subtle">
                 <p className="text-sm text-secondary mb-2">Your response</p>
                 <p className="text-lg text-primary">{review.response}</p>
               </div>

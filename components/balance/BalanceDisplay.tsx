@@ -108,7 +108,7 @@ export function BalanceDisplay({
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-surface-layer rounded-lg p-4">
+          <div className="bg-surface-layer rounded-control p-4">
             <p className="text-sm text-secondary mb-1">{balance.memberAName}</p>
             <p className="text-2xl font-semibold text-primary">
               {formatCurrency(balance.totalPaidByA, currency)}
@@ -119,7 +119,7 @@ export function BalanceDisplay({
                 : `gets back ${formatCurrency(Math.abs(balance.adjustmentA), currency)}`}
             </p>
           </div>
-          <div className="bg-surface-layer rounded-lg p-4">
+          <div className="bg-surface-layer rounded-control p-4">
             <p className="text-sm text-secondary mb-1">{balance.memberBName}</p>
             <p className="text-2xl font-semibold text-primary">
               {formatCurrency(balance.totalPaidByB, currency)}
@@ -132,7 +132,7 @@ export function BalanceDisplay({
           </div>
         </div>
 
-        <div className="bg-surface-layer rounded-lg p-4">
+        <div className="bg-surface-layer rounded-control p-4">
           <p className="text-sm text-secondary mb-3">Split ratio</p>
           <div className="flex gap-2 h-3 rounded-full overflow-hidden">
             <div

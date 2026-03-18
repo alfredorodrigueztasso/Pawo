@@ -147,7 +147,7 @@ export function ReviewPanel({
         <div className="space-y-4">
           <h3 className="text-lg font-bold">Respond to review request</h3>
 
-          <div className="bg-surface-layer rounded-lg p-4 space-y-3">
+          <div className="bg-surface-layer rounded-control p-4 space-y-3">
             <div>
               <p className="text-sm text-secondary mb-1">Question from partner</p>
               <p className="text-lg text-primary">{currentReview.question}</p>

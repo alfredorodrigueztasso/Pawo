@@ -109,7 +109,7 @@ export default async function ExpensesPage() {
               <select
                 name="paidBy"
                 defaultValue="me"
-                className="w-full px-3 py-2 border border-border-subtle rounded-lg"
+                className="w-full px-3 py-2 border border-border-subtle rounded-control"
               >
                 <option value="me">Me</option>
                 {members.map((m) => (

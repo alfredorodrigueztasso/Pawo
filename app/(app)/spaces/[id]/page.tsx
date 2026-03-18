@@ -241,7 +241,7 @@ export default async function HouseholdDetailPage({
         <h2 className="text-base font-semibold text-primary mb-6">
           Current cycle
         </h2>
-        <MetricCards metrics={metrics} columns={4} />
+        <MetricCards metrics={metrics} columns={4} variant="detailed" className="rounded-container" />
       </div>
 
       {/* Expenses List */}
