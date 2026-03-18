@@ -108,3 +108,118 @@ export async function updateIncomeAction({
     return { error: "An unexpected error occurred" };
   }
 }
+
+export async function updateSplitAction({
+  spaceId,
+  splitMode,
+  ownerPercentage,
+  applyToCurrent,
+}: {
+  spaceId: string;
+  splitMode: "manual" | "income";
+  ownerPercentage?: number;
+  applyToCurrent: boolean;
+}) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Not authenticated" };
+    }
+
+    // Fetch all space members
+    const { data: members } = await supabase
+      .from("space_members")
+      .select("*")
+      .eq("space_id", spaceId);
+
+    if (!members || members.length !== 2) {
+      return { error: "Space must have exactly 2 members" };
+    }
+
+    // Identify owner and partner
+    const ownerMember = members.find((m) => m.user_id === user.id);
+    const partnerMember = members.find((m) => m.user_id !== user.id);
+
+    if (!ownerMember) {
+      return { error: "You are not a member of this space" };
+    }
+
+    // Validate and calculate split percentages for manual mode
+    if (splitMode === "manual") {
+      if (ownerPercentage == null || ownerPercentage < 10 || ownerPercentage > 90) {
+        return { error: "Split percentage must be between 10% and 90%" };
+      }
+
+      const partnerPercentage = 100 - ownerPercentage;
+
+      // Update space split_mode
+      const { error: spaceUpdateError } = await supabase
+        .from("spaces")
+        .update({ split_mode: splitMode })
+        .eq("id", spaceId);
+
+      if (spaceUpdateError) {
+        return { error: "Failed to update split mode" };
+      }
+
+      // Update owner member percentage
+      const updateOwnerResult = await updateSpaceMember(supabase, ownerMember.id, {
+        split_percentage: ownerPercentage,
+      });
+
+      if (updateOwnerResult.error) {
+        return { error: "Failed to update owner split percentage" };
+      }
+
+      // Update partner member percentage (if exists and not placeholder)
+      if (partnerMember && partnerMember.user_id) {
+        const updatePartnerResult = await updateSpaceMember(supabase, partnerMember.id, {
+          split_percentage: partnerPercentage,
+        });
+
+        if (updatePartnerResult.error) {
+          return { error: "Failed to update partner split percentage" };
+        }
+      } else if (partnerMember && partnerMember.is_placeholder) {
+        // Update placeholder's percentage
+        const updatePartnerResult = await updateSpaceMember(supabase, partnerMember.id, {
+          split_percentage: partnerPercentage,
+        });
+
+        if (updatePartnerResult.error) {
+          return { error: "Failed to update partner split percentage" };
+        }
+      }
+
+      // TODO: Send email notification to partner
+      // (to be implemented with sendEmail utility)
+
+    } else if (splitMode === "income") {
+      // Update space split_mode only, percentages will be recalculated when incomes are set
+      const { error: spaceUpdateError } = await supabase
+        .from("spaces")
+        .update({ split_mode: splitMode })
+        .eq("id", spaceId);
+
+      if (spaceUpdateError) {
+        return { error: "Failed to update split mode" };
+      }
+
+      // TODO: Send email notification to partner
+      // (to be implemented with sendEmail utility)
+    }
+
+    revalidatePath("/settings");
+    revalidatePath(`/spaces/${spaceId}`);
+
+    return { success: true };
+  } catch (err) {
+    console.error("Update split error:", err);
+    return { error: "An unexpected error occurred" };
+  }
+}

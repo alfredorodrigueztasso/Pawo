@@ -18,6 +18,7 @@ export async function createSpaceAction(data: {
   cycle_start_day: number;
   split_mode: "manual" | "income";
   income?: number | null;
+  split_percentage?: number;
   partnerEmail: string;
 }) {
   try {
@@ -52,9 +53,11 @@ export async function createSpaceAction(data: {
 
     // Calculate split percentage
     let splitPercentageOwner = 50;
-    if (data.split_mode === "income" && data.income) {
-      const { percentA } = suggestSplit(data.income, data.income); // Default: same income
-      splitPercentageOwner = percentA;
+    if (data.split_mode === "manual" && data.split_percentage != null) {
+      splitPercentageOwner = data.split_percentage;
+    } else if (data.split_mode === "income" && data.income) {
+      // Partner income is unknown at creation time, default to 50
+      splitPercentageOwner = 50;
     }
 
     // Add current user as owner

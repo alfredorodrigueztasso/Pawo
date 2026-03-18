@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Badge, Alert } from "@orion-ds/react/client";
+import { Card, Badge } from "@orion-ds/react/client";
 import type { SpaceMember } from "@/types";
 
 interface MembersListProps {
@@ -78,11 +78,6 @@ export function MembersList({
           );
         })}
       </div>
-
-      <Alert variant="info" dismissible className="mt-6">
-        <strong>Note:</strong> Currently, Pawo supports space of 2 members. To change members or split percentages,
-        contact your partner directly.
-      </Alert>
     </Card>
   );
 }

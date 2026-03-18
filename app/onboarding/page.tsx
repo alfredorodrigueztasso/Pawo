@@ -1,14 +1,17 @@
 "use client";
 
 import { Card, Button, Field, Select, Alert } from "@orion-ds/react/client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { SplitConfigurator } from "@/components/SplitConfigurator";
 import { createSpaceAction } from "./actions";
 
 type Step = 1 | 2 | 3;
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -16,6 +19,7 @@ export default function OnboardingPage() {
     currency: "ARS",
     cycleStartDay: "1",
     splitMode: "manual" as "manual" | "income",
+    splitPercentage: 50,
     income: "",
     partnerEmail: "",
   });
@@ -30,44 +34,43 @@ export default function OnboardingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    let isRedirecting = false;
-
-    try {
-      if (step === 1) {
-        if (!formData.spaceName || !formData.cycleStartDay) {
-          setError("Please fill in all fields");
-          setLoading(false);
-          return;
-        }
-        setStep(2);
-      } else if (step === 2) {
-        setStep(3);
-      } else if (step === 3) {
-        // Create space and send invitation
+    if (step === 1) {
+      if (!formData.spaceName || !formData.cycleStartDay) {
+        setError("Please fill in all fields");
+        return;
+      }
+      setStep(2);
+    } else if (step === 2) {
+      if (formData.splitMode === "manual" && (formData.splitPercentage < 10 || formData.splitPercentage > 90)) {
+        setError("Split percentage must be between 10% and 90%");
+        return;
+      }
+      if (formData.splitMode === "income" && !formData.income) {
+        setError("Please enter your monthly income");
+        return;
+      }
+      setStep(3);
+    } else if (step === 3) {
+      // Create space and send invitation
+      startTransition(async () => {
         const result = await createSpaceAction({
           name: formData.spaceName,
           currency: formData.currency,
           cycle_start_day: parseInt(formData.cycleStartDay),
           split_mode: formData.splitMode,
+          split_percentage: formData.splitMode === "manual" ? formData.splitPercentage : undefined,
           income: formData.splitMode === "income" ? parseFloat(formData.income || "0") : null,
           partnerEmail: formData.partnerEmail,
         });
 
         if (result?.error) {
           setError(result.error);
-          setLoading(false);
         } else {
           // Success - redirect to spaces
-          isRedirecting = true;
-          window.location.href = "/spaces";
+          router.push("/spaces");
         }
-      }
-    } finally {
-      if (!isRedirecting) {
-        setLoading(false);
-      }
+      });
     }
   }
 
@@ -147,51 +150,16 @@ export default function OnboardingPage() {
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
-                  style={{
-                    borderColor:
-                      formData.splitMode === "manual" ? "var(--text-brand)" : undefined,
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="splitMode"
-                    value="manual"
-                    checked={formData.splitMode === "manual"}
-                    onChange={handleInputChange}
-                    className="w-4 h-4"
-                  />
-                  <div>
-                    <p className="font-medium text-primary">Fixed split</p>
-                    <p className="text-sm text-secondary">
-                      50/50, 60/40, or any percentage you choose
-                    </p>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
-                  style={{
-                    borderColor:
-                      formData.splitMode === "income" ? "var(--text-brand)" : undefined,
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="splitMode"
-                    value="income"
-                    checked={formData.splitMode === "income"}
-                    onChange={handleInputChange}
-                    className="w-4 h-4"
-                  />
-                  <div>
-                    <p className="font-medium text-primary">Based on income</p>
-                    <p className="text-sm text-secondary">
-                      Split proportional to monthly earnings
-                    </p>
-                  </div>
-                </label>
-              </div>
+              <SplitConfigurator
+                splitMode={formData.splitMode}
+                onSplitModeChange={(mode) =>
+                  setFormData((prev) => ({ ...prev, splitMode: mode }))
+                }
+                splitPercentage={formData.splitPercentage}
+                onSplitPercentageChange={(value) =>
+                  setFormData((prev) => ({ ...prev, splitPercentage: value }))
+                }
+              />
 
               {formData.splitMode === "income" && (
                 <Field
@@ -249,10 +217,10 @@ export default function OnboardingPage() {
             <Button
               variant="primary"
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="flex-1"
             >
-              {loading
+              {isPending
                 ? "Creating..."
                 : step === 3
                   ? "Create Space"

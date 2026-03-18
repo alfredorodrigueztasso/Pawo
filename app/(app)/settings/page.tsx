@@ -2,6 +2,7 @@ import { Card, Field, Button } from "@orion-ds/react/client";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { UpdateIncomeForm } from "./UpdateIncomeForm";
+import { UpdateSplitForm } from "./UpdateSplitForm";
 import { MembersList } from "./MembersList";
 
 export const metadata = {
@@ -57,6 +58,10 @@ export default async function SettingsPage() {
   const splitMode = space?.split_mode || "manual";
   const isIncomeMode = splitMode === "income";
 
+  // Find owner and partner members
+  const ownerMember = members?.find((m) => m.user_id === user.id) || null;
+  const partnerMember = members?.find((m) => m.user_id !== user.id) || null;
+
   return (
     <div className="p-8 space-y-8">
       <div>
@@ -93,15 +98,20 @@ export default async function SettingsPage() {
             defaultValue={String(space?.cycle_start_day)}
             disabled
           />
-          <Field
-            label="Split mode"
-            defaultValue={splitMode === "income" ? "By income" : "Manual"}
-            disabled
-          />
         </form>
       </Card>
 
-      {/* Split Settings - Only show if income mode */}
+      {/* Split Settings - Always show, handles both modes */}
+      {ownerMember && (
+        <UpdateSplitForm
+          spaceId={spaceId}
+          currentSplitMode={splitMode as "manual" | "income"}
+          ownerMember={ownerMember}
+          partnerMember={partnerMember}
+        />
+      )}
+
+      {/* Income Form - Only show if in income mode */}
       {isIncomeMode && (
         <UpdateIncomeForm
           spaceId={spaceId}

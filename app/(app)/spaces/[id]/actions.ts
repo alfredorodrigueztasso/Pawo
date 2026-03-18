@@ -103,7 +103,7 @@ export async function sendInviteAction(formData: FormData) {
     // Fetch space details and current members
     const { data: space, error: spaceError } = await supabase
       .from("spaces")
-      .select("name, space_members(id)")
+      .select("name, space_members(id, user_id, split_percentage)")
       .eq("id", spaceId)
       .single();
 
@@ -128,6 +128,17 @@ export async function sendInviteAction(formData: FormData) {
       return { error: "A placeholder member already exists for this space" };
     }
 
+    // Fetch owner's split_percentage to calculate the correct placeholder percentage
+    const { data: ownerMember } = await supabase
+      .from("space_members")
+      .select("split_percentage")
+      .eq("space_id", spaceId)
+      .eq("user_id", user.id)
+      .single();
+
+    const ownerSplitPct = ownerMember?.split_percentage ?? 50;
+    const placeholderSplitPct = 100 - ownerSplitPct;
+
     // Generate tokens
     const inviteToken = randomUUID();
     const placeholderId = randomUUID();
@@ -144,13 +155,13 @@ export async function sendInviteAction(formData: FormData) {
       return { error: `Failed to create invitation: ${inviteError.message || "Unknown error"}` };
     }
 
-    // Create placeholder member immediately
+    // Create placeholder member immediately with complementary split percentage
     const { error: placeholderError } = await addPlaceholderMember(supabase, {
       space_id: spaceId,
       placeholder_id: placeholderId,
       name: partnerName,
       invited_email: email,
-      split_percentage: 50, // Default split
+      split_percentage: placeholderSplitPct,
     });
 
     if (placeholderError) {

@@ -11,6 +11,7 @@ import {
   useDisclosure,
   useToast,
 } from "@orion-ds/react/client";
+import { SplitConfigurator } from "@/components/SplitConfigurator";
 import { createSpaceAction } from "./actions";
 
 type Step = 1 | 2 | 3;
@@ -28,6 +29,7 @@ export function CreateSpaceModal() {
     currency: "ARS",
     cycleStartDay: "1",
     splitMode: "manual" as "manual" | "income",
+    splitPercentage: 50,
     income: "",
     partnerEmail: "",
   });
@@ -40,6 +42,7 @@ export function CreateSpaceModal() {
       currency: "ARS",
       cycleStartDay: "1",
       splitMode: "manual",
+      splitPercentage: 50,
       income: "",
       partnerEmail: "",
     });
@@ -68,6 +71,14 @@ export function CreateSpaceModal() {
       }
       setStep(2);
     } else if (step === 2) {
+      if (formData.splitMode === "manual" && (formData.splitPercentage < 10 || formData.splitPercentage > 90)) {
+        setError("Split percentage must be between 10% and 90%");
+        return;
+      }
+      if (formData.splitMode === "income" && !formData.income) {
+        setError("Please enter your monthly income");
+        return;
+      }
       setStep(3);
     } else if (step === 3) {
       startTransition(async () => {
@@ -76,6 +87,7 @@ export function CreateSpaceModal() {
           currency: formData.currency,
           cycle_start_day: parseInt(formData.cycleStartDay),
           split_mode: formData.splitMode,
+          split_percentage: formData.splitMode === "manual" ? formData.splitPercentage : undefined,
           income:
             formData.splitMode === "income"
               ? parseFloat(formData.income || "0")
@@ -103,7 +115,7 @@ export function CreateSpaceModal() {
       <Modal open={isOpen} onClose={close} size="md">
         <Modal.Header>Create Space</Modal.Header>
         <Modal.Body>
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-8)" }}>
+          <div className="flex flex-col gap-8">
             {/* Progress indicator */}
             <div className="flex gap-2">
               {[1, 2, 3].map((s) => (
@@ -116,10 +128,7 @@ export function CreateSpaceModal() {
               ))}
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}
-            >
+            <form className="flex flex-col gap-6">
               {/* Step 1: Space details */}
               {step === 1 && (
                 <>
@@ -180,61 +189,16 @@ export function CreateSpaceModal() {
                     </h3>
                   </div>
 
-                  <div
-                    style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-4)" }}
-                  >
-                    <label
-                      className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
-                      style={{
-                        borderColor:
-                          formData.splitMode === "manual"
-                            ? "var(--text-brand)"
-                            : undefined,
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="splitMode"
-                        value="manual"
-                        checked={formData.splitMode === "manual"}
-                        onChange={handleInputChange}
-                        className="w-4 h-4"
-                      />
-                      <div>
-                        <p className="font-medium text-primary">Fixed split</p>
-                        <p className="text-sm text-secondary">
-                          50/50, 60/40, or any percentage you choose
-                        </p>
-                      </div>
-                    </label>
-
-                    <label
-                      className="flex items-center gap-3 p-4 border-2 border-border-subtle rounded-control cursor-pointer hover:border-brand transition"
-                      style={{
-                        borderColor:
-                          formData.splitMode === "income"
-                            ? "var(--text-brand)"
-                            : undefined,
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="splitMode"
-                        value="income"
-                        checked={formData.splitMode === "income"}
-                        onChange={handleInputChange}
-                        className="w-4 h-4"
-                      />
-                      <div>
-                        <p className="font-medium text-primary">
-                          Based on income
-                        </p>
-                        <p className="text-sm text-secondary">
-                          Split proportional to monthly earnings
-                        </p>
-                      </div>
-                    </label>
-                  </div>
+                  <SplitConfigurator
+                    splitMode={formData.splitMode}
+                    onSplitModeChange={(mode) =>
+                      setFormData((prev) => ({ ...prev, splitMode: mode }))
+                    }
+                    splitPercentage={formData.splitPercentage}
+                    onSplitPercentageChange={(value) =>
+                      setFormData((prev) => ({ ...prev, splitPercentage: value }))
+                    }
+                  />
 
                   {formData.splitMode === "income" && (
                     <Field
@@ -293,6 +257,7 @@ export function CreateSpaceModal() {
                   variant="primary"
                   type="submit"
                   disabled={isPending}
+                  onClick={handleSubmit}
                   className="flex-1"
                 >
                   {isPending
