@@ -1,7 +1,7 @@
 import { Card, Alert } from "@orion-ds/react/client";
 import { createClient } from "@/lib/supabase/server";
 import { CloseCycleModal } from "./CloseCycleModal";
-import { formatCyclePeriod, getCurrentCycleProgress } from "@/lib/cycle";
+import { formatCyclePeriod, getCurrentCycleProgress, parseLocalDate } from "@/lib/cycle";
 import { formatCurrency } from "@/lib/currency";
 
 export const metadata = {
@@ -73,8 +73,8 @@ export default async function CyclePage() {
   const cycleExpenses = cycleExpensesData || [];
   const members = space?.space_members || [];
   const progress = getCurrentCycleProgress(
-    new Date(cycle.start_date),
-    new Date(cycle.end_date)
+    parseLocalDate(cycle.start_date),
+    parseLocalDate(cycle.end_date)
   );
 
   return (
@@ -91,8 +91,8 @@ export default async function CyclePage() {
             <p className="text-sm text-secondary mb-2">Period</p>
             <p className="text-lg font-semibold text-primary">
               {formatCyclePeriod(
-                new Date(cycle.start_date),
-                new Date(cycle.end_date)
+                parseLocalDate(cycle.start_date),
+                parseLocalDate(cycle.end_date)
               )}
             </p>
           </div>

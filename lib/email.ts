@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { formatCurrency } from "@/lib/currency";
 
 const FROM_EMAIL = "noreply@pawo.app";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -65,6 +66,7 @@ export async function sendExpenseNotificationEmail({
   amount,
   description,
   spaceName,
+  currency,
 }: {
   recipientEmail: string;
   recipientName: string;
@@ -72,6 +74,7 @@ export async function sendExpenseNotificationEmail({
   amount: number;
   description: string;
   spaceName: string;
+  currency: string;
 }) {
   return getResendClient().emails.send({
     from: FROM_EMAIL,
@@ -85,7 +88,7 @@ export async function sendExpenseNotificationEmail({
 
         <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 0; font-size: 18px;"><strong>${description}</strong></p>
-          <p style="margin: 8px 0 0 0; color: #666;">Amount: <strong>$${amount.toFixed(2)}</strong></p>
+          <p style="margin: 8px 0 0 0; color: #666;">Amount: <strong>${formatCurrency(amount, currency)}</strong></p>
         </div>
 
         <p style="color: #666; font-size: 14px; margin-top: 20px;">
@@ -109,6 +112,7 @@ export async function sendReviewRequestEmail({
   question,
   suggestedAmount,
   expenseLink,
+  currency,
 }: {
   recipientEmail: string;
   recipientName: string;
@@ -118,6 +122,7 @@ export async function sendReviewRequestEmail({
   question: string;
   suggestedAmount?: number;
   expenseLink: string;
+  currency: string;
 }) {
   return getResendClient().emails.send({
     from: FROM_EMAIL,
@@ -131,8 +136,8 @@ export async function sendReviewRequestEmail({
 
         <div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 0; font-size: 16px;"><strong>${description}</strong></p>
-          <p style="margin: 8px 0 0 0; color: #666;">Amount: <strong>$${amount.toFixed(2)}</strong></p>
-          ${suggestedAmount ? `<p style="margin: 8px 0 0 0; color: #f59e0b;">Suggested: <strong>$${suggestedAmount.toFixed(2)}</strong></p>` : ""}
+          <p style="margin: 8px 0 0 0; color: #666;">Amount: <strong>${formatCurrency(amount, currency)}</strong></p>
+          ${suggestedAmount ? `<p style="margin: 8px 0 0 0; color: #f59e0b;">Suggested: <strong>${formatCurrency(suggestedAmount, currency)}</strong></p>` : ""}
         </div>
 
         <p style="margin: 20px 0; color: #333;"><strong>Their question:</strong></p>

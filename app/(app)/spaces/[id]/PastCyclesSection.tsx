@@ -3,6 +3,7 @@
 import { Card, Badge } from "@orion-ds/react/client";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/currency";
+import { parseLocalDate } from "@/lib/cycle";
 import type { Cycle } from "@/types";
 
 interface PastCyclesSectionProps {
@@ -25,8 +26,8 @@ export function PastCyclesSection({
   }
 
   const formatCycleLabel = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
     return `${start.toLocaleDateString("es-CL", { day: "numeric", month: "short" })} – ${end.toLocaleDateString("es-CL", { day: "numeric", month: "short" })}`;
   };
 

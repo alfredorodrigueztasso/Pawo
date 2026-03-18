@@ -54,18 +54,22 @@ export async function requestReviewAction({
       return { error: "Payer not found" };
     }
 
-    // Get payer's email
-    const adminSupabase = createServiceClient();
-    const { data: payerAuth } = await adminSupabase.auth.admin.getUserById(
-      expense.paid_by
-    );
+    // Get space currency for email formatting
+    const { data: cycle } = await supabase
+      .from("cycles")
+      .select("space_id")
+      .eq("id", expense.cycle_id)
+      .single();
 
-    const payerEmail = payerAuth?.user?.email;
-    if (!payerEmail) {
-      return { error: "Cannot send email - payer email not found" };
-    }
+    const { data: space } = await supabase
+      .from("spaces")
+      .select("currency")
+      .eq("id", cycle?.space_id)
+      .single();
 
-    // Create the review
+    const currency = space?.currency || "USD";
+
+    // Create the review first (email is optional)
     const result = await createReview(supabase, {
       expense_id: expenseId,
       requested_by: user.id,
@@ -77,20 +81,32 @@ export async function requestReviewAction({
       return { error: result.error.message };
     }
 
-    // Send email to payer
-    const requesterName = user.user_metadata?.name || user.email?.split("@")[0] || "Your partner";
-    await sendReviewRequestEmail({
-      recipientEmail: payerEmail,
-      recipientName: payer.name,
-      senderName: requesterName,
-      amount: expense.amount,
-      description: expense.description || "Untitled",
-      question,
-      suggestedAmount,
-      expenseLink: `${APP_URL}/expenses/${expenseId}`,
-    }).catch((err) => {
+    // Try to send email notification (best-effort, doesn't block review creation)
+    try {
+      const adminSupabase = createServiceClient();
+      const { data: payerAuth } = await adminSupabase.auth.admin.getUserById(
+        expense.paid_by
+      );
+
+      const payerEmail = payerAuth?.user?.email;
+      if (payerEmail) {
+        const requesterName = user.user_metadata?.name || user.email?.split("@")[0] || "Your partner";
+        await sendReviewRequestEmail({
+          recipientEmail: payerEmail,
+          recipientName: payer.name,
+          senderName: requesterName,
+          amount: expense.amount,
+          description: expense.description || "Untitled",
+          question,
+          suggestedAmount,
+          expenseLink: `${APP_URL}/expenses/${expenseId}`,
+          currency,
+        });
+      }
+    } catch (err) {
       console.error("Failed to send review request email:", err);
-    });
+      // Don't fail the request if email fails
+    }
 
     revalidatePath(`/expenses/${expenseId}`);
     return { success: true };

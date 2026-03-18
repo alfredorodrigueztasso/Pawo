@@ -76,7 +76,7 @@ export async function updateIncomeAction({
       supabase,
       currentMember.id,
       {
-        monthly_income: monthlyIncome || undefined,
+        monthly_income: monthlyIncome ?? undefined,
         split_percentage: newPercentageCurrentUser,
       }
     );

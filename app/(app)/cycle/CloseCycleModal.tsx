@@ -168,7 +168,7 @@ export function CloseCycleModal({
         {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
         <div className="flex gap-3">
-          <Button variant="secondary" type="button" className="flex-1">
+          <Button variant="secondary" type="button" className="flex-1" onClick={() => router.back()}>
             Cancel
           </Button>
           <Button

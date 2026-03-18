@@ -139,7 +139,7 @@ export default async function ExpenseDetailPage({
       </Card>
 
       {/* Review Panel */}
-      {canRequestReview && (
+      {(canRequestReview || canRespond) && (
         <ReviewPanel
           expenseId={expense.id}
           paidByName={paidByName}
@@ -149,36 +149,6 @@ export default async function ExpenseDetailPage({
           currentUserId={user.id}
           currency={currency}
         />
-      )}
-
-      {review && canRespond && (
-        <Card className="p-8 bg-surface-subtle border-2 border-border-subtle">
-          <h3 className="text-xl font-bold mb-4 text-primary">
-            {paidByName} is asking about this expense
-          </h3>
-          <div className="space-y-4">
-            <div className="bg-surface-layer rounded-control p-4">
-              <p className="text-sm text-secondary mb-2">Their question</p>
-              <p className="text-lg text-primary">{review.question}</p>
-            </div>
-
-            {review.suggested_amount && (
-              <div className="bg-surface-layer rounded-control p-4">
-                <p className="text-sm text-secondary mb-2">Suggested amount</p>
-                <p className="text-xl font-semibold text-primary">
-                  {formatCurrency(review.suggested_amount, currency)}
-                </p>
-              </div>
-            )}
-
-            {review.status === "resolved" && review.response && (
-              <div className="bg-surface-layer rounded-control p-4 border border-border-subtle">
-                <p className="text-sm text-secondary mb-2">Your response</p>
-                <p className="text-lg text-primary">{review.response}</p>
-              </div>
-            )}
-          </div>
-        </Card>
       )}
     </div>
   );
