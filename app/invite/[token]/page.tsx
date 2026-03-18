@@ -151,7 +151,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
               </p>
             </div>
 
-            {error && <Alert variant="error">{error}</Alert>}
+            {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             {invitationData.spaceSplitMode === "income" && (
               <Field

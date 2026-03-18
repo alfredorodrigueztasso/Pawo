@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
           </div>
 
           {/* Alert */}
-          {error && <Alert variant="error">{error}</Alert>}
+          {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
           {/* Form */}
           {isValid && !error && (

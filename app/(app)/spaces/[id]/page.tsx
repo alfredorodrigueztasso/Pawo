@@ -231,7 +231,7 @@ export default async function HouseholdDetailPage({
 
       {/* Waiting state when not ready */}
       {!isReady && (
-        <Alert variant="info">
+        <Alert variant="info" dismissible>
           Your partner hasn't joined yet, but you can manage this space alone ({members.length} / 2 members)
         </Alert>
       )}

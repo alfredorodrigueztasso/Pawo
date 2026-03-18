@@ -91,7 +91,7 @@ export function AddExpenseModal({
             <input type="hidden" name="spaceId" value={spaceId} />
             <input type="hidden" name="cycleId" value={cycleId} />
 
-            {error && <Alert variant="error">{error}</Alert>}
+            {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             <div className="flex gap-3 pt-4">
               <Button

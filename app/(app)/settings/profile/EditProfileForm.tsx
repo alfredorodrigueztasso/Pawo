@@ -156,9 +156,9 @@ export function EditProfileForm({
         </div>
       </div>
 
-      {error && <Alert variant="error">{error}</Alert>}
+      {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
       {success && (
-        <Alert variant="success">
+        <Alert variant="success" dismissible onClose={() => setSuccess(false)}>
           {emailChanged
             ? "Profile updated! Check your email to confirm the new address."
             : "Profile updated successfully"}

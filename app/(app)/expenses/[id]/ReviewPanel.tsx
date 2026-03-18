@@ -109,7 +109,7 @@ export function ReviewPanel({
                 step="0.01"
               />
 
-              {error && <Alert variant="error">{error}</Alert>}
+              {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
               <div className="flex gap-3">
                 <Button
@@ -173,7 +173,7 @@ export function ReviewPanel({
               required
             />
 
-            {error && <Alert variant="error">{error}</Alert>}
+            {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             <div className="flex gap-3">
               <Button variant="secondary" type="button" className="flex-1">

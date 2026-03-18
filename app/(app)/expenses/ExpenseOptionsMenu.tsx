@@ -160,7 +160,7 @@ export function ExpenseOptionsMenu({
               onChange={handleEditChange}
             />
 
-            {error && <Alert variant="error">{error}</Alert>}
+            {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             <div className="flex gap-3 pt-4">
               <Button
@@ -194,7 +194,7 @@ export function ExpenseOptionsMenu({
         <AlertDialog.Description>
           This action cannot be undone. The expense will be permanently deleted.
         </AlertDialog.Description>
-        {error && <Alert variant="error">{error}</Alert>}
+        {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
         <AlertDialog.Actions>
           <Button variant="secondary" onClick={onDeleteClose}>
             Cancel

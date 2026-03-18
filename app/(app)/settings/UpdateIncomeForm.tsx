@@ -66,7 +66,7 @@ export function UpdateIncomeForm({
           step="0.01"
         />
 
-        {error && <Alert variant="error">{error}</Alert>}
+        {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
         <Button
           variant="primary"

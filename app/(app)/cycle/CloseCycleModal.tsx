@@ -133,7 +133,7 @@ export function CloseCycleModal({
               </div>
             </div>
 
-            <Alert variant="info">
+            <Alert variant="info" dismissible>
               {(() => {
                 const balance = calculateBalance(
                   expenses,
@@ -171,7 +171,7 @@ export function CloseCycleModal({
           </div>
         )}
 
-        {error && <Alert variant="error">{error}</Alert>}
+        {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
         <div className="flex gap-3">
           <Button variant="secondary" type="button" className="flex-1">

@@ -68,7 +68,7 @@ export function InviteModal({ spaceId, spaceName }: InviteModalProps) {
           {inviteLink ? (
             // Link sharing view (when email is not configured)
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
-              <Alert variant="info">
+              <Alert variant="info" dismissible>
                 Share this link directly with your partner:
               </Alert>
 
@@ -115,7 +115,7 @@ export function InviteModal({ spaceId, spaceName }: InviteModalProps) {
 
               <input type="hidden" name="spaceId" value={spaceId} />
 
-              {error && <Alert variant="error">{error}</Alert>}
+              {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
               <div className="flex gap-3 pt-4">
                 <Button

@@ -139,7 +139,7 @@ export function SpaceOptionsMenu({ space }: SpaceOptionsMenuProps) {
               required
             />
 
-            {error && <Alert variant="error">{error}</Alert>}
+            {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             <div className="flex gap-3 pt-4">
               <Button
@@ -170,7 +170,7 @@ export function SpaceOptionsMenu({ space }: SpaceOptionsMenuProps) {
         <AlertDialog.Description>
           This action cannot be undone. All expenses and members will be permanently deleted.
         </AlertDialog.Description>
-        {error && <Alert variant="error">{error}</Alert>}
+        {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
         <AlertDialog.Actions>
           <Button variant="secondary" onClick={onDeleteClose}>
             Cancel

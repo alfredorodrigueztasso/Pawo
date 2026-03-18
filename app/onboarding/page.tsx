@@ -226,13 +226,13 @@ export default function OnboardingPage() {
                 placeholder="partner@example.com"
               />
 
-              <Alert variant="info">
+              <Alert variant="info" dismissible>
                 Optional — you can invite your partner later from the space details
               </Alert>
             </>
           )}
 
-          {error && <Alert variant="error">{error}</Alert>}
+          {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
           {/* Buttons */}
           <div className="flex gap-3">

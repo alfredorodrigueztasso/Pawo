@@ -74,7 +74,7 @@ export default function LoginPage() {
           </div>
 
           {/* Alert */}
-          {error && <Alert variant="error">{error}</Alert>}
+          {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>

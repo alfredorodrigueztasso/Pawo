@@ -74,7 +74,7 @@ export function MembersList({
         })}
       </div>
 
-      <Alert variant="info" className="mt-6">
+      <Alert variant="info" dismissible className="mt-6">
         <strong>Note:</strong> Currently, Pawo supports space of 2 members. To change members or split percentages,
         contact your partner directly.
       </Alert>

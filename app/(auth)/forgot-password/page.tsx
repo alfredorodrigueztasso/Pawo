@@ -51,9 +51,9 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Alert */}
-          {error && <Alert variant="error">{error}</Alert>}
+          {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
           {success && (
-            <Alert variant="success">
+            <Alert variant="success" dismissible onClose={() => setSuccess(false)}>
               Check your email for a password reset link. The link expires in 1 hour.
             </Alert>
           )}
