@@ -263,6 +263,7 @@ export function CreateSpaceModal() {
                     variant="secondary"
                     onClick={handleBack}
                     type="button"
+                    size="lg"
                     className="flex-1"
                   >
                     Back
@@ -273,6 +274,7 @@ export function CreateSpaceModal() {
                   type="submit"
                   disabled={isPending}
                   onClick={handleSubmit}
+                  size="lg"
                   className="flex-1"
                 >
                   {isPending
