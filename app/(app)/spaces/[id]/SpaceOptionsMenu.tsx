@@ -119,12 +119,12 @@ export function SpaceOptionsMenu({ space }: SpaceOptionsMenuProps) {
                 }
                 variant="outline"
                 size="md"
+                style={{ width: "100%" }}
               >
-                <ToggleGroup.Item value="ARS">ARS</ToggleGroup.Item>
-                <ToggleGroup.Item value="USD">USD</ToggleGroup.Item>
-                <ToggleGroup.Item value="EUR">EUR</ToggleGroup.Item>
-                <ToggleGroup.Item value="CLP">CLP</ToggleGroup.Item>
-                <ToggleGroup.Item value="MXN">MXN</ToggleGroup.Item>
+                <ToggleGroup.Item value="USD" style={{ flex: 1 }}>USD</ToggleGroup.Item>
+                <ToggleGroup.Item value="EUR" style={{ flex: 1 }}>EUR</ToggleGroup.Item>
+                <ToggleGroup.Item value="CLP" style={{ flex: 1 }}>CLP</ToggleGroup.Item>
+                <ToggleGroup.Item value="MXN" style={{ flex: 1 }}>MXN</ToggleGroup.Item>
               </ToggleGroup>
             </div>
 
