@@ -6,9 +6,14 @@ export interface Expense {
 }
 
 export interface Member {
-  user_id: string;
+  user_id: string | null;
+  placeholder_id?: string | null;
   split_percentage: number;
   name: string;
+}
+
+function getMemberEffectiveId(m: Member): string {
+  return m.user_id ?? m.placeholder_id ?? '';
 }
 
 export interface BalanceSummary {
@@ -29,18 +34,30 @@ export function calculateBalance(
 ): BalanceSummary {
   const [memberA, memberB] = members;
 
+  const memberAId = getMemberEffectiveId(memberA);
+  const memberBId = getMemberEffectiveId(memberB);
+
   const totalPaidByA = expenses
-    .filter((e) => e.paid_by === memberA.user_id)
+    .filter((e) => e.paid_by === memberAId)
     .reduce((sum, e) => sum + e.amount, 0);
 
   const totalPaidByB = expenses
-    .filter((e) => e.paid_by === memberB.user_id)
+    .filter((e) => e.paid_by === memberBId)
     .reduce((sum, e) => sum + e.amount, 0);
 
   const totalExpenses = totalPaidByA + totalPaidByB;
 
-  const splitA = totalExpenses * (memberA.split_percentage / 100);
-  const splitB = totalExpenses * (memberB.split_percentage / 100);
+  // Calculate split per expense, respecting split_override if present
+  let splitA = 0;
+  let splitB = 0;
+  for (const expense of expenses) {
+    const overrideA = expense.split_override?.[memberAId];
+    const overrideB = expense.split_override?.[memberBId];
+    const pctA = overrideA ?? memberA.split_percentage;
+    const pctB = overrideB ?? memberB.split_percentage;
+    splitA += expense.amount * (pctA / 100);
+    splitB += expense.amount * (pctB / 100);
+  }
 
   const adjustmentA = splitA - totalPaidByA;
   const adjustmentB = splitB - totalPaidByB;
@@ -66,8 +83,9 @@ export function calculateSoloBalance(
   expenses: Expense[],
   member: Member
 ): SoloBalance {
+  const memberId = getMemberEffectiveId(member);
   const totalSpent = expenses
-    .filter((e) => e.paid_by === member.user_id)
+    .filter((e) => e.paid_by === memberId)
     .reduce((sum, e) => sum + e.amount, 0);
 
   return { totalSpent };

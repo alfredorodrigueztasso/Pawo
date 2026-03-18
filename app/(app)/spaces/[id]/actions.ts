@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createInvitation } from "@/lib/supabase/queries";
+import { createInvitation, addPlaceholderMember } from "@/lib/supabase/queries";
 import { sendInvitationEmail } from "@/lib/email";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
@@ -83,10 +83,11 @@ export async function deleteSpaceAction({
 
 export async function sendInviteAction(formData: FormData) {
   try {
+    const partnerName = formData.get("partnerName") as string;
     const email = formData.get("email") as string;
     const spaceId = formData.get("spaceId") as string;
 
-    if (!email || !spaceId) {
+    if (!partnerName || !email || !spaceId) {
       return { error: "Missing required fields" };
     }
 
@@ -99,10 +100,10 @@ export async function sendInviteAction(formData: FormData) {
       return { error: "Not authenticated" };
     }
 
-    // Fetch space details
+    // Fetch space details and current members
     const { data: space, error: spaceError } = await supabase
       .from("spaces")
-      .select("name")
+      .select("name, space_members(id)")
       .eq("id", spaceId)
       .single();
 
@@ -110,23 +111,55 @@ export async function sendInviteAction(formData: FormData) {
       return { error: "Space not found" };
     }
 
-    // Generate invite token
-    const token = randomUUID();
+    // Check if space already has 2 members
+    if (space.space_members && space.space_members.length >= 2) {
+      return { error: "Space already has 2 members" };
+    }
 
-    // Create invitation in database (DB has default expires_at)
+    // Check if placeholder already exists for this space
+    const { data: existingPlaceholder } = await supabase
+      .from("space_members")
+      .select("id")
+      .eq("space_id", spaceId)
+      .eq("is_placeholder", true)
+      .single();
+
+    if (existingPlaceholder) {
+      return { error: "A placeholder member already exists for this space" };
+    }
+
+    // Generate tokens
+    const inviteToken = randomUUID();
+    const placeholderId = randomUUID();
+
+    // Create invitation with partner name
     const { error: inviteError } = await createInvitation(supabase, {
       space_id: spaceId,
       email,
-      token,
+      token: inviteToken,
+      partner_name: partnerName,
     });
 
     if (inviteError) {
       return { error: `Failed to create invitation: ${inviteError.message || "Unknown error"}` };
     }
 
+    // Create placeholder member immediately
+    const { error: placeholderError } = await addPlaceholderMember(supabase, {
+      space_id: spaceId,
+      placeholder_id: placeholderId,
+      name: partnerName,
+      invited_email: email,
+      split_percentage: 50, // Default split
+    });
+
+    if (placeholderError) {
+      return { error: `Failed to create placeholder member: ${placeholderError.message || "Unknown error"}` };
+    }
+
     // Build invite link
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const inviteLink = `${appUrl}/invite/${token}`;
+    const inviteLink = `${appUrl}/invite/${inviteToken}`;
 
     // Attempt to send invitation email (best-effort)
     const senderName = user.user_metadata?.name || user.email?.split("@")[0] || "Someone";
@@ -136,13 +169,15 @@ export async function sendInviteAction(formData: FormData) {
         recipientEmail: email,
         senderName,
         spaceName: space.name,
-        invitationToken: token,
+        invitationToken: inviteToken,
       });
       emailSent = true;
     } catch (emailErr) {
       // Email not configured or failed — still return success with link for manual sharing
       console.error("Email send failed (will show invite link to copy):", emailErr);
     }
+
+    revalidatePath(`/spaces/${spaceId}`);
 
     return { success: true, emailSent, inviteLink };
   } catch (err) {

@@ -47,13 +47,94 @@ export async function addSpaceMember(
   client: SupabaseClient,
   data: {
     space_id: string;
-    user_id: string;
+    user_id?: string | null;
     name: string;
+    placeholder_id?: string;
+    invited_email?: string;
+    is_placeholder?: boolean;
     split_percentage: number;
     role: "owner" | "member";
   }
 ) {
   return client.from("space_members").insert([data]).select().single();
+}
+
+export async function addPlaceholderMember(
+  client: SupabaseClient,
+  data: {
+    space_id: string;
+    placeholder_id: string;
+    name: string;
+    invited_email: string;
+    split_percentage: number;
+  }
+) {
+  return client.from("space_members").insert([
+    {
+      space_id: data.space_id,
+      placeholder_id: data.placeholder_id,
+      invited_email: data.invited_email,
+      name: data.name,
+      split_percentage: data.split_percentage,
+      user_id: null,
+      is_placeholder: true,
+      role: "member",
+    },
+  ]).select().single();
+}
+
+export async function claimPlaceholderMember(
+  client: SupabaseClient,
+  spaceId: string,
+  invitedEmail: string,
+  userId: string,
+  name: string
+) {
+  const { data: member, error: fetchError } = await client
+    .from("space_members")
+    .select("placeholder_id")
+    .eq("space_id", spaceId)
+    .eq("invited_email", invitedEmail)
+    .eq("is_placeholder", true)
+    .single();
+
+  if (fetchError || !member) {
+    throw new Error(`Placeholder member not found: ${fetchError?.message}`);
+  }
+
+  const oldPlaceholderId = member.placeholder_id;
+
+  const { error: updateError } = await client
+    .from("space_members")
+    .update({
+      user_id: userId,
+      is_placeholder: false,
+      placeholder_id: null,
+      invited_email: null,
+      name,
+    })
+    .eq("space_id", spaceId)
+    .eq("invited_email", invitedEmail)
+    .eq("is_placeholder", true);
+
+  if (updateError) {
+    throw new Error(`Failed to claim placeholder: ${updateError.message}`);
+  }
+
+  return oldPlaceholderId;
+}
+
+export async function updateExpensesPaidBy(
+  client: SupabaseClient,
+  spaceId: string,
+  fromId: string,
+  toId: string
+) {
+  return client
+    .from("expenses")
+    .update({ paid_by: toId })
+    .eq("space_id", spaceId)
+    .eq("paid_by", fromId);
 }
 
 export async function updateSpaceMember(
@@ -179,6 +260,7 @@ export async function createInvitation(
     space_id: string;
     email: string;
     token: string;
+    partner_name?: string;
   }
 ) {
   return client
@@ -197,6 +279,7 @@ export async function getInvitationByToken(
     .select("*, spaces(*)")
     .eq("token", token)
     .eq("status", "pending")
+    .gte("expires_at", new Date().toISOString())
     .single();
 }
 

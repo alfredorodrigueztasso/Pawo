@@ -2,6 +2,7 @@
 
 import { Card, Button, Field, Alert, Textarea } from "@orion-ds/react/client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { requestReviewAction, respondToReviewAction } from "./actions";
 import { formatCurrency } from "@/lib/currency";
 import type { Review } from "@/types";
@@ -25,6 +26,7 @@ export function ReviewPanel({
   currentUserId,
   currency,
 }: ReviewPanelProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -50,7 +52,7 @@ export function ReviewPanel({
       setQuestion("");
       setSuggestedAmount("");
       setShowForm(false);
-      window.location.reload();
+      router.refresh();
     }
   };
 
@@ -71,7 +73,7 @@ export function ReviewPanel({
       setLoading(false);
     } else {
       setResponse("");
-      window.location.reload();
+      router.refresh();
     }
   };
 
@@ -138,10 +140,8 @@ export function ReviewPanel({
         </div>
       </Card>
     );
-  }
-
-  // Review exists and current user can respond
-  if (canRespond && currentReview && currentReview.status === "pending") {
+  } else if (canRespond && currentReview && currentReview.status === "pending") {
+    // Review exists and current user can respond
     return (
       <Card className="p-8">
         <div className="space-y-4">
@@ -176,7 +176,15 @@ export function ReviewPanel({
             {error && <Alert variant="error" dismissible onClose={() => setError(null)}>{error}</Alert>}
 
             <div className="flex gap-3">
-              <Button variant="secondary" type="button" className="flex-1">
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => {
+                  setResponse("");
+                  router.refresh();
+                }}
+                className="flex-1"
+              >
                 Dismiss
               </Button>
               <Button
@@ -192,10 +200,8 @@ export function ReviewPanel({
         </div>
       </Card>
     );
-  }
-
-  // Review is resolved
-  if (currentReview && currentReview.status === "resolved") {
+  } else if (currentReview && currentReview.status === "resolved") {
+    // Review is resolved
     return (
       <Alert variant="success">
         <div className="space-y-3">

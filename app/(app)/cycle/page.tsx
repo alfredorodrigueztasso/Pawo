@@ -24,7 +24,8 @@ export default async function CyclePage() {
     .from("space_members")
     .select("space_id")
     .eq("user_id", user.id)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (!spaceResult.data) {
     return (
@@ -36,8 +37,8 @@ export default async function CyclePage() {
 
   const spaceId = spaceResult.data.space_id;
 
-  // Get active cycle
-  const [cycleResult, spaceResult2, expensesResult] = await Promise.all([
+  // Get active cycle and space
+  const [cycleResult, spaceResult2] = await Promise.all([
     supabase
       .from("cycles")
       .select("*")
@@ -45,18 +46,16 @@ export default async function CyclePage() {
       .eq("status", "open")
       .order("start_date", { ascending: false })
       .limit(1)
-      .single(),
+      .maybeSingle(),
     supabase
       .from("spaces")
       .select("*, space_members(*)")
       .eq("id", spaceId)
       .single(),
-    supabase.from("expenses").select("*"),
   ]);
 
   const cycle = cycleResult.data;
   const space = spaceResult2.data;
-  const allExpenses = expensesResult.data || [];
 
   if (!cycle) {
     return (
@@ -66,7 +65,12 @@ export default async function CyclePage() {
     );
   }
 
-  const cycleExpenses = allExpenses.filter((e) => e.cycle_id === cycle.id);
+  // Get expenses for this cycle (with proper filtering)
+  const { data: cycleExpensesData } = await supabase
+    .from("expenses")
+    .select("*")
+    .eq("cycle_id", cycle.id);
+  const cycleExpenses = cycleExpensesData || [];
   const members = space?.space_members || [];
   const progress = getCurrentCycleProgress(
     new Date(cycle.start_date),

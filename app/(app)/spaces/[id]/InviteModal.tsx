@@ -106,6 +106,14 @@ export function InviteModal({ spaceId, spaceName }: InviteModalProps) {
               style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}
             >
               <Field
+                label="Partner's Name"
+                type="text"
+                name="partnerName"
+                placeholder="John Doe"
+                required
+              />
+
+              <Field
                 label="Email"
                 type="email"
                 name="email"

@@ -124,7 +124,7 @@ export function ExpensesList({
   currentUserId,
 }: ExpensesListProps) {
   const getMemberName = (userId: string) => {
-    return members.find((m) => m.user_id === userId)?.name || "Unknown";
+    return members.find((m) => m.user_id === userId || m.placeholder_id === userId)?.name || "Unknown";
   };
 
   const formatDate = (date: string) => {
@@ -182,21 +182,25 @@ export function ExpensesList({
         />
       ),
     },
-    ...members.map((member) => ({
-      id: member.user_id,
-      label: member.user_id === currentUserId ? "Me" : member.name,
-      badge: memberCounts[member.user_id] || 0,
-      content: (
-        <ExpenseListContent
-          filteredExpenses={expenses.filter((e) => e.paid_by === member.user_id)}
-          members={members}
-          spaceId={spaceId}
-          currency={currency}
-          getMemberName={getMemberName}
-          formatDate={formatDate}
-        />
-      ),
-    })),
+    ...members.map((member) => {
+      const memberEffectiveId = member.user_id ?? member.placeholder_id ?? member.id;
+      const isCurrent = member.user_id === currentUserId;
+      return {
+        id: memberEffectiveId,
+        label: isCurrent ? "Me" : member.name,
+        badge: memberCounts[memberEffectiveId] || 0,
+        content: (
+          <ExpenseListContent
+            filteredExpenses={expenses.filter((e) => e.paid_by === memberEffectiveId)}
+            members={members}
+            spaceId={spaceId}
+            currency={currency}
+            getMemberName={getMemberName}
+            formatDate={formatDate}
+          />
+        ),
+      };
+    }),
   ];
 
   return (

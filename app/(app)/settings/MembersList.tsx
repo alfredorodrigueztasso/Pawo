@@ -34,7 +34,7 @@ export function MembersList({
       <div className="space-y-3">
         {members.map((member) => {
           const isCurrentUser = member.user_id === currentUserId;
-          const email = memberEmails[member.user_id] || "unknown@example.com";
+          const email = member.is_placeholder ? (member.invited_email || "—") : (memberEmails[member.user_id] || "—");
 
           return (
             <div
@@ -48,6 +48,11 @@ export function MembersList({
                     {isCurrentUser && (
                       <Badge variant="info" className="ml-2">
                         You
+                      </Badge>
+                    )}
+                    {member.is_placeholder && (
+                      <Badge variant="warning" className="ml-2">
+                        Pending
                       </Badge>
                     )}
                   </p>

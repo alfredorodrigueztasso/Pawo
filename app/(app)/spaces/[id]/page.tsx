@@ -96,11 +96,13 @@ export default async function HouseholdDetailPage({
   const members: SpaceMember[] = space?.space_members || [];
 
   // Fetch profiles for member avatars
-  const memberUserIds = members.map((m) => m.user_id);
-  const { data: profilesData } = await supabase
-    .from("profiles")
-    .select("id, avatar_url")
-    .in("id", memberUserIds);
+  const memberUserIds = members.filter((m) => m.user_id).map((m) => m.user_id as string);
+  const { data: profilesData } = memberUserIds.length > 0
+    ? await supabase
+        .from("profiles")
+        .select("id, avatar_url")
+        .in("id", memberUserIds)
+    : { data: [] };
 
   // Seed profileMap with current user's avatar from auth metadata
   const profileMap: Record<string, string> = {};
@@ -147,7 +149,7 @@ export default async function HouseholdDetailPage({
 
   const cycleExpenses: Expense[] = cycleExpensesData || [];
 
-  const isReady = members.length === 2;
+  const isReady = members.length === 2 && members.every(m => !m.is_placeholder);
 
   // Calculate stats
   const totalSpent = cycleExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -164,22 +166,24 @@ export default async function HouseholdDetailPage({
   );
   const cycleLabel = `${new Date(cycle.start_date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })} → ${new Date(cycle.end_date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}`;
 
-  // Calculate balance
-  let balanceDisplay = "—";
-  if (isReady && cycleExpenses.length > 0) {
+  // Calculate balance with dynamic label
+  const balanceState = (() => {
+    if (!isReady || cycleExpenses.length === 0) {
+      return { label: "Balance", value: "—" };
+    }
     const balance = calculateBalance(cycleExpenses, [members[0], members[1]]);
     const currentMember = members.find((m) => m.user_id === user.id);
-    const isCurrentMemberA = currentMember?.user_id === members[0].user_id;
+    const isCurrentMemberA = currentMember?.user_id === members[0].user_id || (!currentMember && members[0].user_id === null);
     const userAdjustment = isCurrentMemberA ? balance.adjustmentA : balance.adjustmentB;
 
     if (userAdjustment > 0) {
-      balanceDisplay = `You owe ${formatCurrency(userAdjustment, space.currency)}`;
+      return { label: "You owe", value: formatCurrency(userAdjustment, space.currency) };
     } else if (userAdjustment < 0) {
-      balanceDisplay = `You're owed ${formatCurrency(Math.abs(userAdjustment), space.currency)}`;
+      return { label: "In your favor", value: formatCurrency(Math.abs(userAdjustment), space.currency) };
     } else {
-      balanceDisplay = "Settled";
+      return { label: "Settled", value: "—" };
     }
-  }
+  })();
 
   const metrics = [
     {
@@ -188,8 +192,8 @@ export default async function HouseholdDetailPage({
       description: cycleLabel,
     },
     {
-      label: "Balance",
-      value: balanceDisplay,
+      label: balanceState.label,
+      value: balanceState.value,
     },
     {
       label: "Días restantes",
@@ -213,7 +217,7 @@ export default async function HouseholdDetailPage({
             <h1 className="text-4xl font-bold text-primary">{space?.name}</h1>
             <div className="flex items-center -space-x-2">
               {members.map((m) => (
-                <MemberAvatar key={m.id} name={m.name} avatarUrl={profileMap[m.user_id]} />
+                <MemberAvatar key={m.id} name={m.name} avatarUrl={m.user_id ? profileMap[m.user_id] : undefined} />
               ))}
             </div>
           </div>
@@ -230,7 +234,7 @@ export default async function HouseholdDetailPage({
       </div>
 
       {/* Waiting state when not ready */}
-      {!isReady && (
+      {members.some((m) => m.is_placeholder) && (
         <Alert variant="info" dismissible>
           Your partner hasn't joined yet, but you can manage this space alone ({members.length} / 2 members)
         </Alert>

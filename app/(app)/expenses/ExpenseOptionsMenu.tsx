@@ -16,6 +16,10 @@ import {
 import { updateExpenseAction, deleteExpenseAction } from "../home/actions";
 import type { Expense, SpaceMember } from "@/types";
 
+function getMemberValue(member: SpaceMember): string {
+  return member.user_id ?? member.placeholder_id ?? member.id;
+}
+
 interface ExpenseOptionsMenuProps {
   expense: Expense;
   spaceId: string;
@@ -146,8 +150,8 @@ export function ExpenseOptionsMenu({
               onChange={handleEditChange}
               required
               options={members.map((member) => ({
-                value: member.user_id,
-                label: member.name,
+                value: getMemberValue(member),
+                label: member.is_placeholder ? `${member.name} (pending)` : member.name,
               }))}
             />
 

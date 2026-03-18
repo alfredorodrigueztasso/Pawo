@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import {
   createReview,
   resolveReview,
@@ -54,7 +55,8 @@ export async function requestReviewAction({
     }
 
     // Get payer's email
-    const { data: payerAuth } = await supabase.auth.admin.getUserById(
+    const adminSupabase = createServiceClient();
+    const { data: payerAuth } = await adminSupabase.auth.admin.getUserById(
       expense.paid_by
     );
 
@@ -159,7 +161,8 @@ export async function respondToReviewAction({
     }
 
     // Get requester's email
-    const { data: requesterAuth } = await supabase.auth.admin.getUserById(
+    const adminSupabase = createServiceClient();
+    const { data: requesterAuth } = await adminSupabase.auth.admin.getUserById(
       review.requested_by
     );
 

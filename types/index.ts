@@ -12,8 +12,11 @@ export interface Space {
 export interface SpaceMember {
   id: string;
   space_id: string;
-  user_id: string;
+  user_id: string | null;
+  placeholder_id?: string | null;
   name: string;
+  invited_email?: string | null;
+  is_placeholder: boolean;
   monthly_income?: number;
   split_percentage: number;
   role: 'owner' | 'member';
@@ -52,6 +55,7 @@ export interface Invitation {
   space_id: string;
   email: string;
   token: string;
+  partner_name?: string | null;
   status: 'pending' | 'accepted' | 'expired';
   created_at: string;
   expires_at: string;

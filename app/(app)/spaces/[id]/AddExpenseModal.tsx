@@ -6,6 +6,10 @@ import { Button, Field, Alert, Modal, Select, useDisclosure, useToast } from "@o
 import { addExpenseAction } from "../../home/actions";
 import type { SpaceMember } from "@/types";
 
+function getMemberValue(member: SpaceMember): string {
+  return member.user_id ?? member.placeholder_id ?? member.id;
+}
+
 interface AddExpenseModalProps {
   spaceId: string;
   cycleId: string;
@@ -73,10 +77,10 @@ export function AddExpenseModal({
                 { value: "", label: "Select a member" },
                 { value: "me", label: "Me" },
                 ...members
-                  .filter((m) => m.user_id !== currentUserId)
+                  .filter((m) => (m.user_id ?? m.placeholder_id) !== currentUserId)
                   .map((member) => ({
-                    value: member.user_id,
-                    label: member.name,
+                    value: getMemberValue(member),
+                    label: member.is_placeholder ? `${member.name} (pending)` : member.name,
                   })),
               ]}
             />

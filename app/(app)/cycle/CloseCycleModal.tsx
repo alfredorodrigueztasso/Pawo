@@ -1,7 +1,8 @@
 "use client";
 
 import { Card, Button, Alert, Badge } from "@orion-ds/react/client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { closeCycleAction } from "./actions";
 import { formatCurrency } from "@/lib/currency";
 import type { Cycle, Expense, SpaceMember } from "@/types";
@@ -22,10 +23,20 @@ export function CloseCycleModal({
   spaceId,
   currency,
 }: CloseCycleModalProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isReady = members.length === 2;
+  const isReady = members.length === 2 && members.every(m => !m.is_placeholder);
+
+  // Memoize balance calculation to avoid recomputing on every render
+  const balance = useMemo(
+    () =>
+      isReady
+        ? calculateBalance(expenses, members as [SpaceMember, SpaceMember])
+        : null,
+    [expenses, members, isReady]
+  );
 
   const handleClose = async () => {
     setError(null);
@@ -33,13 +44,8 @@ export function CloseCycleModal({
 
     let summary;
 
-    if (isReady) {
+    if (isReady && balance) {
       // Paired mode: full balance calculation
-      const balance = calculateBalance(
-        expenses,
-        members as [SpaceMember, SpaceMember]
-      );
-
       summary = {
         totalExpenses: balance.totalExpenses,
         memberAPaid: balance.totalPaidByA,
@@ -70,7 +76,7 @@ export function CloseCycleModal({
       setError(result.error);
       setLoading(false);
     } else {
-      window.location.reload();
+      router.refresh();
     }
   };
 
@@ -102,7 +108,7 @@ export function CloseCycleModal({
                 <span className="font-semibold text-primary">
                   {formatCurrency(
                     expenses
-                      .filter((e) => e.paid_by === members[0].user_id)
+                      .filter((e) => e.paid_by === (members[0].user_id ?? members[0].placeholder_id))
                       .reduce((sum, e) => sum + e.amount, 0),
                     currency
                   )}
@@ -113,7 +119,7 @@ export function CloseCycleModal({
                 <span className="font-semibold text-primary">
                   {formatCurrency(
                     expenses
-                      .filter((e) => e.paid_by === members[1].user_id)
+                      .filter((e) => e.paid_by === (members[1].user_id ?? members[1].placeholder_id))
                       .reduce((sum, e) => sum + e.amount, 0),
                     currency
                   )}
@@ -122,27 +128,15 @@ export function CloseCycleModal({
               <div className="border-t border-border-subtle pt-3 flex justify-between">
                 <span className="font-medium text-primary">Final adjustment:</span>
                 <span className="font-bold text-brand">
-                  {(() => {
-                    const balance = calculateBalance(
-                      expenses,
-                      members as [SpaceMember, SpaceMember]
-                    );
-                    return formatCurrency(Math.abs(balance.adjustmentA), currency);
-                  })()}
+                  {balance && formatCurrency(Math.abs(balance.adjustmentA), currency)}
                 </span>
               </div>
             </div>
 
             <Alert variant="info" dismissible>
-              {(() => {
-                const balance = calculateBalance(
-                  expenses,
-                  members as [SpaceMember, SpaceMember]
-                );
-                return balance.adjustmentA > 0
-                  ? `${members[1].name} should transfer ${formatCurrency(Math.abs(balance.adjustmentA), currency)} to ${members[0].name}`
-                  : `${members[0].name} should transfer ${formatCurrency(Math.abs(balance.adjustmentA), currency)} to ${members[1].name}`;
-              })()}
+              {balance && (balance.adjustmentA > 0
+                ? `${members[1].name} should transfer ${formatCurrency(Math.abs(balance.adjustmentA), currency)} to ${members[0].name}`
+                : `${members[0].name} should transfer ${formatCurrency(Math.abs(balance.adjustmentA), currency)} to ${members[1].name}`)}
             </Alert>
           </>
         ) : (
@@ -162,7 +156,7 @@ export function CloseCycleModal({
               <span className="font-semibold text-primary">
                 {formatCurrency(
                   expenses
-                    .filter((e) => e.paid_by === members[0].user_id)
+                    .filter((e) => e.paid_by === (members[0].user_id ?? members[0].placeholder_id))
                     .reduce((sum, e) => sum + e.amount, 0),
                   currency
                 )}
