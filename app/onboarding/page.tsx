@@ -21,6 +21,7 @@ export default function OnboardingPage() {
     splitMode: "manual" as "manual" | "income",
     splitPercentage: 50,
     income: "",
+    partnerName: "",
     partnerEmail: "",
   });
 
@@ -61,7 +62,8 @@ export default function OnboardingPage() {
           split_mode: formData.splitMode,
           split_percentage: formData.splitMode === "manual" ? formData.splitPercentage : undefined,
           income: formData.splitMode === "income" ? parseFloat(formData.income || "0") : null,
-          partnerEmail: formData.partnerEmail,
+          partnerName: formData.partnerName || undefined,
+          partnerEmail: formData.partnerEmail || undefined,
         });
 
         if (result?.error) {
@@ -189,6 +191,16 @@ export default function OnboardingPage() {
                   Step 3 of 3: Complete setup
                 </p>
               </div>
+
+              <Field
+                label="Partner's name (optional)"
+                type="text"
+                name="partnerName"
+                value={formData.partnerName}
+                onChange={handleInputChange}
+                placeholder="e.g., Ana"
+                helperText="Helps calculate shared expenses right away"
+              />
 
               <Field
                 label="Partner's email (optional)"

@@ -19,7 +19,8 @@ export async function createSpaceAction(data: {
   split_mode: "manual" | "income";
   income?: number | null;
   split_percentage?: number;
-  partnerEmail: string;
+  partnerName?: string;
+  partnerEmail?: string;
 }) {
   try {
     const supabase = await createClient();
@@ -98,8 +99,52 @@ export async function createSpaceAction(data: {
       return { error: "Failed to create cycle: no data returned (check RLS policies on cycles table)" };
     }
 
-    // Create invitation for partner (optional)
-    if (data.partnerEmail) {
+    // Create placeholder member if partner name provided
+    if (data.partnerName) {
+      const placeholderId = crypto.randomUUID();
+      const placeholderResult = await addSpaceMember(supabase, {
+        space_id: space.id,
+        user_id: null,
+        placeholder_id: placeholderId,
+        name: data.partnerName,
+        invited_email: data.partnerEmail || undefined,
+        is_placeholder: true,
+        split_percentage: 100 - splitPercentageOwner,
+        role: "member",
+      });
+
+      if (placeholderResult.error) {
+        console.error("Placeholder member creation error:", placeholderResult.error);
+        return { error: `Failed to create placeholder member: ${placeholderResult.error.message || "Unknown error"}` };
+      }
+
+      // Send invitation if email provided
+      if (data.partnerEmail) {
+        const invitationToken = crypto.randomBytes(32).toString("hex");
+        const inviteResult = await createInvitation(supabase, {
+          space_id: space.id,
+          email: data.partnerEmail,
+          token: invitationToken,
+        });
+
+        if (inviteResult.error) {
+          console.error("Invitation creation error:", inviteResult.error);
+          return { error: `Failed to create invitation: ${inviteResult.error.message || "Unknown error"}` };
+        }
+
+        // Send invitation email
+        const ownerName = user.user_metadata?.name || user.email?.split("@")[0] || "Your partner";
+        await sendInvitationEmail({
+          recipientEmail: data.partnerEmail,
+          senderName: ownerName,
+          spaceName: data.name,
+          invitationToken,
+        }).catch((err) => {
+          console.error("Failed to send invitation email:", err);
+        });
+      }
+    } else if (data.partnerEmail) {
+      // No name but email: send invitation only
       const invitationToken = crypto.randomBytes(32).toString("hex");
       const inviteResult = await createInvitation(supabase, {
         space_id: space.id,
