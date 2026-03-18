@@ -98,7 +98,7 @@ export default function OnboardingPage() {
           {step === 1 && (
             <>
               <div>
-                <h2 className="text-2xl font-bold mb-1">Create your space</h2>
+                <h2 className="text-2xl font-bold mb-1">What's your space?</h2>
                 <p className="text-sm text-secondary">
                   Step 1 of 3: Basic information
                 </p>
