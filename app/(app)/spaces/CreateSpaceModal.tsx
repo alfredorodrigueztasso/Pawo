@@ -132,6 +132,13 @@ export function CreateSpaceModal() {
               {/* Step 1: Space details */}
               {step === 1 && (
                 <>
+                  <div>
+                    <h2 className="text-2xl font-bold mb-1">What's your space?</h2>
+                    <p className="text-sm text-secondary">
+                      Step 1 of 3: Basic information
+                    </p>
+                  </div>
+
                   <Field
                     label="Space name"
                     type="text"
@@ -184,9 +191,10 @@ export function CreateSpaceModal() {
               {step === 2 && (
                 <>
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">
-                      How do you split?
-                    </h3>
+                    <h2 className="text-2xl font-bold mb-1">How do you split?</h2>
+                    <p className="text-sm text-secondary">
+                      Step 2 of 3: Division method
+                    </p>
                   </div>
 
                   <SplitConfigurator
@@ -218,9 +226,10 @@ export function CreateSpaceModal() {
               {step === 3 && (
                 <>
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">
-                      Invite your partner
-                    </h3>
+                    <h2 className="text-2xl font-bold mb-1">Invite your partner</h2>
+                    <p className="text-sm text-secondary">
+                      Step 3 of 3: Complete setup
+                    </p>
                   </div>
 
                   <Field
