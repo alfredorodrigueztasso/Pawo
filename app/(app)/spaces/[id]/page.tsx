@@ -149,7 +149,7 @@ export default async function HouseholdDetailPage({
 
   const cycleExpenses: Expense[] = cycleExpensesData || [];
 
-  const isReady = members.length === 2 && members.every(m => !m.is_placeholder);
+  const isReady = members.length === 2;
 
   // Calculate stats
   const totalSpent = cycleExpenses.reduce((sum, e) => sum + e.amount, 0);

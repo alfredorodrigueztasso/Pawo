@@ -27,7 +27,7 @@ export function CloseCycleModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isReady = members.length === 2 && members.every(m => !m.is_placeholder);
+  const isReady = members.length === 2;
 
   // Memoize balance calculation to avoid recomputing on every render
   const balance = useMemo(
