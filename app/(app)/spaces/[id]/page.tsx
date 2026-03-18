@@ -8,7 +8,7 @@ import { SpaceOptionsMenu } from "./SpaceOptionsMenu";
 import { PastCyclesSection } from "./PastCyclesSection";
 import { calculateBalance, calculateSoloBalance } from "@/lib/balance";
 import { formatCurrency } from "@/lib/currency";
-import { parseLocalDate } from "@/lib/cycle";
+import { parseLocalDate, getCycleDaysStats } from "@/lib/cycle";
 import type { SpaceMember, Expense, Cycle } from "@/types";
 
 export const metadata = {
@@ -154,17 +154,11 @@ export default async function HouseholdDetailPage({
 
   // Calculate stats
   const totalSpent = cycleExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const daysRemaining = Math.max(
-    0,
-    Math.ceil(
-      (parseLocalDate(cycle.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    )
+  const { daysRemaining, totalCycleDays } = getCycleDaysStats(
+    parseLocalDate(cycle.start_date),
+    parseLocalDate(cycle.end_date)
   );
   const expenseCount = cycleExpenses.length;
-
-  const totalCycleDays = Math.ceil(
-    (parseLocalDate(cycle.end_date).getTime() - parseLocalDate(cycle.start_date).getTime()) / (1000 * 60 * 60 * 24)
-  );
   const cycleLabel = `${parseLocalDate(cycle.start_date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })} → ${parseLocalDate(cycle.end_date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}`;
 
   // Calculate balance with dynamic label

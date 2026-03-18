@@ -58,3 +58,40 @@ export function parseLocalDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
+
+/**
+ * Calcula días restantes y duración total del ciclo.
+ * daysRemaining está garantizado <= totalCycleDays.
+ *
+ * @param cycleStartDate - Fecha de inicio del ciclo (medianoche local)
+ * @param cycleEndDate - Fecha de fin del ciclo (medianoche local)
+ * @param today - Fecha actual normalizada a medianoche local
+ * @returns { daysRemaining, totalCycleDays }
+ */
+export function getCycleDaysStats(
+  cycleStartDate: Date,
+  cycleEndDate: Date,
+  today: Date = new Date()
+): { daysRemaining: number; totalCycleDays: number } {
+  const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+  // Normalizar today a medianoche local (elimina asimetría sub-día)
+  const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+  // Conteo inclusivo: Mar 20 → Apr 19 = 31 días (ambos extremos incluidos)
+  const totalCycleDays = Math.round(
+    (cycleEndDate.getTime() - cycleStartDate.getTime()) / MS_PER_DAY
+  ) + 1;
+
+  const daysFromTodayToEnd = Math.round(
+    (cycleEndDate.getTime() - todayMidnight.getTime()) / MS_PER_DAY
+  );
+
+  // Clamp: garantía estructural que remaining <= total siempre
+  const daysRemaining = Math.min(
+    totalCycleDays,
+    Math.max(0, daysFromTodayToEnd)
+  );
+
+  return { daysRemaining, totalCycleDays };
+}
