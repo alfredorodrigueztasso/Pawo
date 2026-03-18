@@ -34,7 +34,7 @@ export function MembersList({
       <div className="space-y-3">
         {members.map((member) => {
           const isCurrentUser = member.user_id === currentUserId;
-          const email = member.is_placeholder ? (member.invited_email || "—") : (memberEmails[member.user_id] || "—");
+          const email = member.is_placeholder ? (member.invited_email || "—") : (member.user_id ? (memberEmails[member.user_id] || "—") : "—");
 
           return (
             <div

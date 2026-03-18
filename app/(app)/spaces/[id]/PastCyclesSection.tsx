@@ -9,7 +9,7 @@ interface PastCyclesSectionProps {
   cycles: Cycle[];
   currency: string;
   currentUserId: string;
-  members: Array<{ user_id: string; name: string; split_percentage: number }>;
+  members: Array<{ user_id: string | null; name: string; split_percentage: number }>;
 }
 
 export function PastCyclesSection({

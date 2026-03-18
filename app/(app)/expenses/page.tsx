@@ -113,7 +113,7 @@ export default async function ExpensesPage() {
               >
                 <option value="me">Me</option>
                 {members.map((m) => (
-                  <option key={m.id} value={m.user_id}>
+                  <option key={m.id} value={m.user_id ?? m.placeholder_id ?? m.id}>
                     {m.name}
                   </option>
                 ))}
