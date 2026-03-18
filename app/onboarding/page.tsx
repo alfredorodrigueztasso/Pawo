@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Button, Field, Select, Alert } from "@orion-ds/react/client";
+import { Card, Button, Field, Select, Alert, Stepper } from "@orion-ds/react/client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { SplitConfigurator } from "@/components/SplitConfigurator";
@@ -82,23 +82,28 @@ export default function OnboardingPage() {
     <Card className="p-8 shadow-lg">
       <div className="space-y-6">
         {/* Progress indicator */}
-        <div className="flex gap-2">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`h-2 flex-1 rounded-full ${
-                s <= step ? "bg-brand" : "bg-surface-subtle"
-              }`}
-            />
-          ))}
-        </div>
+        <Stepper
+          steps={[
+            { id: "1", title: "Space" },
+            { id: "2", title: "Split" },
+            { id: "3", title: "Partner" },
+          ]}
+          currentStep={step - 1}
+          size="sm"
+          showNumbers={true}
+          showCheckmarks={true}
+          showConnectors={true}
+          clickable={false}
+          orientation="horizontal"
+          labelPosition="bottom"
+        />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Step 1: Space details */}
           {step === 1 && (
             <>
               <div>
-                <h2 className="text-2xl font-bold mb-1">What's your space?</h2>
+                <h2 className="text-2xl font-bold mb-1">Name your space</h2>
                 <p className="text-sm text-secondary">
                   Step 1 of 3: Basic information
                 </p>
@@ -144,7 +149,7 @@ export default function OnboardingPage() {
           {step === 2 && (
             <>
               <div>
-                <h2 className="text-2xl font-bold mb-1">How do you split?</h2>
+                <h2 className="text-2xl font-bold mb-1">Choose how to split</h2>
                 <p className="text-sm text-secondary">
                   Step 2 of 3: Division method
                 </p>
