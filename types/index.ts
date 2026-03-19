@@ -3,7 +3,9 @@ export interface Space {
   name: string;
   created_by: string;
   currency: string;
-  cycle_start_day: number;
+  cycle_start_day: number | null;
+  cycle_type: 'weekly' | 'biweekly' | 'monthly' | 'custom';
+  cycle_duration_days: number | null;
   split_mode: 'income' | 'manual';
   created_at: string;
   updated_at: string;

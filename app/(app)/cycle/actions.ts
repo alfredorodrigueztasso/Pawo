@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { closeCycle, createCycle } from "@/lib/supabase/queries";
-import { getNextCycleStartDate, getNextCycleEndDate } from "@/lib/cycle";
+import { getNextCycleDates } from "@/lib/cycle";
 
 export async function closeCycleAction(data: {
   cycleId: string;
@@ -21,30 +21,51 @@ export async function closeCycleAction(data: {
     }
 
     // Close current cycle
-    await closeCycle(supabase, data.cycleId, user.id, data.summary);
+    const closeResult = await closeCycle(supabase, data.cycleId, user.id, data.summary);
 
-    // Create new cycle
-    const now = new Date();
+    if (closeResult.error) {
+      return { error: `Failed to close cycle: ${closeResult.error.message}` };
+    }
 
-    // Get space to know cycle start day
-    const spaceResult = await supabase
-      .from("spaces")
-      .select("cycle_start_day")
-      .eq("id", data.spaceId)
-      .single();
+    // Get space config and current cycle end_date
+    const [spaceResult, cycleResult] = await Promise.all([
+      supabase
+        .from("spaces")
+        .select("cycle_type, cycle_duration_days, cycle_start_day")
+        .eq("id", data.spaceId)
+        .single(),
+      supabase
+        .from("cycles")
+        .select("end_date")
+        .eq("id", data.cycleId)
+        .single(),
+    ]);
 
     if (!spaceResult.data) {
       return { error: "Space not found" };
     }
 
-    const cycleStartDay = spaceResult.data.cycle_start_day;
-    const nextStart = getNextCycleStartDate(cycleStartDay, now);
-    const nextEnd = getNextCycleEndDate(cycleStartDay, now);
+    if (!cycleResult.data) {
+      return { error: "Cycle not found" };
+    }
+
+    // Calculate next cycle: starts day after current cycle ends
+    // Use addDays helper manually since we're in a server action
+    const currentEndDate = new Date(cycleResult.data.end_date);
+    const nextStartDate = new Date(currentEndDate);
+    nextStartDate.setDate(nextStartDate.getDate() + 1);
+
+    const nextStartStr = nextStartDate.toISOString().split("T")[0];
+
+    const cycleDates = getNextCycleDates(spaceResult.data.cycle_type, nextStartStr, {
+      cycleDurationDays: spaceResult.data.cycle_duration_days ?? undefined,
+      cycleStartDay: spaceResult.data.cycle_start_day ?? undefined,
+    });
 
     const newCycleResult = await createCycle(supabase, {
       space_id: data.spaceId,
-      start_date: nextStart.toISOString().split("T")[0],
-      end_date: nextEnd.toISOString().split("T")[0],
+      start_date: cycleDates.start,
+      end_date: cycleDates.end,
     });
 
     if (newCycleResult.error) {

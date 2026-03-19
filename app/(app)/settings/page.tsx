@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { UpdateIncomeForm } from "./UpdateIncomeForm";
 import { UpdateSplitForm } from "./UpdateSplitForm";
 import { MembersList } from "./MembersList";
+import { UpdateCycleForm } from "./UpdateCycleForm";
 
 export const metadata = {
   title: "Settings — Pawo",
@@ -92,14 +93,18 @@ export default async function SettingsPage() {
             defaultValue={space?.currency}
             disabled
           />
-          <Field
-            label="Cycle start day"
-            type="number"
-            defaultValue={String(space?.cycle_start_day)}
-            disabled
-          />
         </form>
       </Card>
+
+      {/* Cycle Configuration - Only show to owner */}
+      {space?.created_by === user.id && (
+        <UpdateCycleForm
+          spaceId={spaceId}
+          currentCycleType={space?.cycle_type || "monthly"}
+          currentCycleDurationDays={space?.cycle_duration_days}
+          currentCycleStartDay={space?.cycle_start_day}
+        />
+      )}
 
       {/* Split Settings - Always show, handles both modes */}
       {ownerMember && (

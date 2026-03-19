@@ -1,7 +1,7 @@
-import { Card, Alert } from "@orion-ds/react/client";
+import { Card, Alert, Badge } from "@orion-ds/react/client";
 import { createClient } from "@/lib/supabase/server";
 import { CloseCycleModal } from "./CloseCycleModal";
-import { formatCyclePeriod, getCurrentCycleProgress, parseLocalDate } from "@/lib/cycle";
+import { formatCyclePeriod, getCurrentCycleProgress, parseLocalDate, getCycleDaysStats } from "@/lib/cycle";
 import { formatCurrency } from "@/lib/currency";
 
 export const metadata = {
@@ -77,6 +77,23 @@ export default async function CyclePage() {
     parseLocalDate(cycle.end_date)
   );
 
+  // Calculate remaining days for better UX messaging
+  const { daysRemaining, totalCycleDays } = getCycleDaysStats(
+    parseLocalDate(cycle.start_date),
+    parseLocalDate(cycle.end_date)
+  );
+
+  // Determine progress stage and message
+  const getProgressStage = (percentage: number) => {
+    if (percentage < 25) return { text: "Recién empezando", variant: "info" as const };
+    if (percentage < 60) return { text: "A mitad del camino", variant: "info" as const };
+    if (percentage < 85) return { text: "Casi terminando", variant: "info" as const };
+    if (percentage < 100) return { text: `Quedan ${daysRemaining} días`, variant: "warning" as const };
+    return { text: "Listo para cerrar", variant: "success" as const };
+  };
+
+  const progressStage = getProgressStage(progress);
+
   return (
     <div className="p-8 space-y-8">
       <div>
@@ -104,7 +121,12 @@ export default async function CyclePage() {
                 style={{ width: `${Math.min(progress, 100)}%` }}
               ></div>
             </div>
-            <p className="text-sm text-secondary mt-2">{progress}% complete</p>
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant={progressStage.variant} size="sm">
+                {progressStage.text}
+              </Badge>
+              <span className="text-xs text-secondary">({progress}% of cycle)</span>
+            </div>
           </div>
 
           <div className="pt-4 border-t border-border-subtle">

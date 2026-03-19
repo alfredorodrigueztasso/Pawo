@@ -1,3 +1,100 @@
+export type CycleType = 'weekly' | 'biweekly' | 'monthly' | 'custom';
+
+/**
+ * Convierte una cadena YYYY-MM-DD a Date (medianoche local)
+ */
+function parseDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/**
+ * Convierte una Date a cadena YYYY-MM-DD
+ */
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Suma N días a una Date
+ */
+function addDaysToDate(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+/**
+ * Calcula las fechas de inicio y fin del siguiente ciclo.
+ * Reemplaza getNextCycleStartDate y getNextCycleEndDate.
+ *
+ * @param cycleType - Tipo de ciclo: 'weekly' (7 días), 'biweekly' (14 días), 'monthly', 'custom'
+ * @param fromDate - Fecha de inicio del nuevo ciclo (formato YYYY-MM-DD o Date)
+ * @param options - { cycleDurationDays?: number, cycleStartDay?: number }
+ *   - cycleDurationDays: para 'custom' (mínimo 2 días)
+ *   - cycleStartDay: para 'monthly' (1-28)
+ * @returns { start: string, end: string } en formato YYYY-MM-DD
+ */
+export function getNextCycleDates(
+  cycleType: CycleType,
+  fromDate: string | Date,
+  options?: {
+    cycleDurationDays?: number;
+    cycleStartDay?: number;
+  }
+): { start: string; end: string } {
+  const startDate = typeof fromDate === 'string' ? parseDate(fromDate) : fromDate;
+
+  let endDate: Date;
+
+  switch (cycleType) {
+    case 'weekly':
+      // 7 días: start + 6 (inclusive)
+      endDate = addDaysToDate(startDate, 6);
+      break;
+
+    case 'biweekly':
+      // 14 días: start + 13 (inclusive)
+      endDate = addDaysToDate(startDate, 13);
+      break;
+
+    case 'monthly': {
+      // Comportamiento actual: cycleStartDay → un día antes del siguiente cycleStartDay
+      const cycleStartDay = options?.cycleStartDay ?? 1;
+      const year = startDate.getFullYear();
+      const month = startDate.getMonth();
+
+      // Próximo ciclo comienza el cycleStartDay del mes siguiente
+      const nextCycleStart = new Date(year, month + 1, cycleStartDay);
+
+      // El fin del ciclo actual es un día antes
+      endDate = addDaysToDate(nextCycleStart, -1);
+      break;
+    }
+
+    case 'custom': {
+      // Duración personalizada: startDate + (duration - 1)
+      const duration = options?.cycleDurationDays ?? 7;
+      endDate = addDaysToDate(startDate, duration - 1);
+      break;
+    }
+
+    default:
+      throw new Error(`Unknown cycle type: ${cycleType}`);
+  }
+
+  return {
+    start: formatDate(startDate),
+    end: formatDate(endDate),
+  };
+}
+
+/**
+ * @deprecated Use getNextCycleDates instead
+ */
 export function getNextCycleStartDate(
   startDay: number,
   fromDate: Date = new Date()
@@ -16,6 +113,9 @@ export function getNextCycleStartDate(
   return cycleStart;
 }
 
+/**
+ * @deprecated Use getNextCycleDates instead
+ */
 export function getNextCycleEndDate(
   startDay: number,
   fromDate: Date = new Date()

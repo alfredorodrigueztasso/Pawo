@@ -14,6 +14,8 @@ import {
 } from "@orion-ds/react/client";
 import { SplitConfigurator } from "@/components/SplitConfigurator";
 import { createSpaceAction } from "./actions";
+import { getNextCycleDates } from "@/lib/cycle";
+import type { CycleType } from "@/lib/cycle";
 
 type Step = 1 | 2 | 3;
 
@@ -28,7 +30,11 @@ export function CreateSpaceModal() {
   const [formData, setFormData] = useState({
     spaceName: "",
     currency: "USD",
+    cycleType: "monthly" as CycleType,
+    cycleDurationDays: undefined as number | undefined,
     cycleStartDay: "1",
+    cycleStartDate: new Date().toISOString().split("T")[0],
+    startDateMode: "today" as "today" | "nextMonday" | "custom",
     splitMode: "manual" as "manual" | "income",
     splitPercentage: 50,
     income: "",
@@ -36,13 +42,43 @@ export function CreateSpaceModal() {
     partnerEmail: "",
   });
 
+  // Calculate cycle preview when cycle config changes
+  const getCyclePreview = () => {
+    try {
+      let startDate = formData.cycleStartDate;
+
+      // Adjust based on startDateMode
+      if (formData.startDateMode === "nextMonday") {
+        const date = new Date(startDate);
+        const day = date.getDay();
+        const daysUntilMonday = (1 - day + 7) % 7 || 7;
+        date.setDate(date.getDate() + daysUntilMonday);
+        startDate = date.toISOString().split("T")[0];
+      }
+
+      const cycleDates = getNextCycleDates(formData.cycleType, startDate, {
+        cycleDurationDays: formData.cycleDurationDays,
+        cycleStartDay: formData.cycleType === "monthly" ? parseInt(formData.cycleStartDay) : undefined,
+      });
+
+      return `${cycleDates.start} → ${cycleDates.end}`;
+    } catch {
+      return "Invalid configuration";
+    }
+  };
+
   function handleOpen() {
     setStep(1);
     setError(null);
+    const today = new Date().toISOString().split("T")[0];
     setFormData({
       spaceName: "",
       currency: "USD",
+      cycleType: "monthly",
+      cycleDurationDays: undefined,
       cycleStartDay: "1",
+      cycleStartDate: today,
+      startDateMode: "today",
       splitMode: "manual",
       splitPercentage: 50,
       income: "",
@@ -68,8 +104,12 @@ export function CreateSpaceModal() {
     setError(null);
 
     if (step === 1) {
-      if (!formData.spaceName || !formData.cycleStartDay) {
+      if (!formData.spaceName || !formData.cycleType) {
         setError("Please fill in all fields");
+        return;
+      }
+      if (formData.cycleType === "custom" && !formData.cycleDurationDays) {
+        setError("Please specify cycle duration in days");
         return;
       }
       setStep(2);
@@ -84,11 +124,24 @@ export function CreateSpaceModal() {
       }
       setStep(3);
     } else if (step === 3) {
+      // Determine final cycle start date
+      let finalStartDate = formData.cycleStartDate;
+      if (formData.startDateMode === "nextMonday") {
+        const date = new Date(formData.cycleStartDate);
+        const day = date.getDay();
+        const daysUntilMonday = (1 - day + 7) % 7 || 7;
+        date.setDate(date.getDate() + daysUntilMonday);
+        finalStartDate = date.toISOString().split("T")[0];
+      }
+
       startTransition(async () => {
         const result = await createSpaceAction({
           name: formData.spaceName,
           currency: formData.currency,
-          cycle_start_day: parseInt(formData.cycleStartDay),
+          cycle_type: formData.cycleType,
+          cycle_duration_days: formData.cycleDurationDays,
+          cycle_start_day: formData.cycleType === "monthly" ? parseInt(formData.cycleStartDay) : null,
+          cycle_start_date: finalStartDate,
           split_mode: formData.splitMode,
           split_percentage: formData.splitMode === "manual" ? formData.splitPercentage : undefined,
           income:
@@ -123,7 +176,7 @@ export function CreateSpaceModal() {
             {/* Progress indicator */}
             <Stepper
               steps={[
-                { id: "1", title: "Space" },
+                { id: "1", title: "Cycles" },
                 { id: "2", title: "Split" },
                 { id: "3", title: "Partner" },
               ]}
@@ -138,16 +191,17 @@ export function CreateSpaceModal() {
             />
 
             <form className="flex flex-col gap-6">
-              {/* Step 1: Space details */}
+              {/* Step 1: Cycle configuration */}
               {step === 1 && (
                 <>
                   <div>
-                    <h2 className="text-2xl font-bold mb-1">Name your space</h2>
+                    <h2 className="text-2xl font-bold mb-1">Configure your cycles</h2>
                     <p className="text-sm text-secondary">
-                      Step 1 of 3: Basic information
+                      Step 1 of 3: Set up expense tracking periods
                     </p>
                   </div>
 
+                  {/* Space name */}
                   <Field
                     label="Space name"
                     type="text"
@@ -158,6 +212,7 @@ export function CreateSpaceModal() {
                     required
                   />
 
+                  {/* Currency */}
                   <div>
                     <label className="text-sm font-medium text-primary mb-2 block">
                       Currency
@@ -182,17 +237,106 @@ export function CreateSpaceModal() {
                     </ToggleGroup>
                   </div>
 
-                  <Field
-                    label="Cycle starts on day (1-28)"
-                    type="number"
-                    name="cycleStartDay"
-                    min="1"
-                    max="28"
-                    value={formData.cycleStartDay}
-                    onChange={handleInputChange}
-                    helperText="Your expense cycles will run from this day each month"
-                    required
-                  />
+                  {/* Cycle cadence */}
+                  <div>
+                    <label className="text-sm font-medium text-primary mb-2 block">
+                      ¿Cada cuánto quieren revisar sus gastos?
+                    </label>
+                    <ToggleGroup
+                      type="single"
+                      value={formData.cycleType}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          cycleType: val as CycleType,
+                          cycleDurationDays: val === "custom" ? 7 : undefined,
+                        }))
+                      }
+                      variant="outline"
+                      size="md"
+                      style={{ width: "100%" }}
+                    >
+                      <ToggleGroup.Item value="monthly" style={{ flex: 1 }}>Mensual</ToggleGroup.Item>
+                      <ToggleGroup.Item value="biweekly" style={{ flex: 1 }}>Quincenal</ToggleGroup.Item>
+                      <ToggleGroup.Item value="weekly" style={{ flex: 1 }}>Semanal</ToggleGroup.Item>
+                    </ToggleGroup>
+                  </div>
+
+                  {/* Custom duration input */}
+                  {formData.cycleType === "custom" && (
+                    <Field
+                      label="Duración del ciclo (mínimo 2 días)"
+                      type="number"
+                      name="cycleDurationDays"
+                      value={formData.cycleDurationDays ?? ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          cycleDurationDays: e.target.value ? parseInt(e.target.value) : undefined,
+                        }))
+                      }
+                      min="2"
+                      placeholder="e.g., 10"
+                      required
+                    />
+                  )}
+
+                  {/* Monthly: Day of month */}
+                  {formData.cycleType === "monthly" && (
+                    <Field
+                      label="Día de corte del mes (1-28)"
+                      type="number"
+                      name="cycleStartDay"
+                      min="1"
+                      max="28"
+                      value={formData.cycleStartDay}
+                      onChange={handleInputChange}
+                      helperText="Los ciclos correrán desde este día cada mes"
+                      required
+                    />
+                  )}
+
+                  {/* Cycle start date */}
+                  <div>
+                    <label className="text-sm font-medium text-primary mb-2 block">
+                      ¿Cuándo empieza el primer ciclo?
+                    </label>
+                    <ToggleGroup
+                      type="single"
+                      value={formData.startDateMode}
+                      onValueChange={(val) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          startDateMode: val as "today" | "nextMonday" | "custom",
+                        }))
+                      }
+                      variant="outline"
+                      size="md"
+                      style={{ width: "100%" }}
+                    >
+                      <ToggleGroup.Item value="today" style={{ flex: 1 }}>Hoy</ToggleGroup.Item>
+                      <ToggleGroup.Item value="nextMonday" style={{ flex: 1 }}>Próximo lunes</ToggleGroup.Item>
+                      <ToggleGroup.Item value="custom" style={{ flex: 1 }}>Elegir fecha</ToggleGroup.Item>
+                    </ToggleGroup>
+                  </div>
+
+                  {/* Custom date picker */}
+                  {formData.startDateMode === "custom" && (
+                    <Field
+                      label="Fecha de inicio"
+                      type="date"
+                      name="cycleStartDate"
+                      value={formData.cycleStartDate}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  )}
+
+                  {/* Cycle preview */}
+                  <div className="bg-surface-alt p-4 rounded-lg border border-border">
+                    <p className="text-xs text-secondary mb-1">Vista previa del ciclo:</p>
+                    <p className="text-sm font-medium text-primary">{getCyclePreview()}</p>
+                  </div>
                 </>
               )}
 

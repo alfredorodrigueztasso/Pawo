@@ -24,7 +24,9 @@ export async function createSpace(
     name: string;
     created_by: string;
     currency: string;
-    cycle_start_day: number;
+    cycle_type: 'weekly' | 'biweekly' | 'monthly' | 'custom';
+    cycle_duration_days?: number | null;
+    cycle_start_day?: number | null;
     split_mode: "income" | "manual";
   }
 ) {

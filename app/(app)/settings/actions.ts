@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { updateSpaceMember } from "@/lib/supabase/queries";
 import { suggestSplit } from "@/lib/balance";
 import { revalidatePath } from "next/cache";
+import type { CycleType } from "@/lib/cycle";
 
 export async function updateIncomeAction({
   spaceId,
@@ -220,6 +221,60 @@ export async function updateSplitAction({
     return { success: true };
   } catch (err) {
     console.error("Update split error:", err);
+    return { error: "An unexpected error occurred" };
+  }
+}
+
+export async function updateCycleConfigAction(data: {
+  spaceId: string;
+  cycle_type: CycleType;
+  cycle_duration_days?: number | null;
+  cycle_start_day?: number | null;
+}) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Not authenticated" };
+    }
+
+    // Verify user is the space owner
+    const spaceResult = await supabase
+      .from("spaces")
+      .select("created_by")
+      .eq("id", data.spaceId)
+      .single();
+
+    if (!spaceResult.data || spaceResult.data.created_by !== user.id) {
+      return { error: "Only the space owner can change cycle configuration" };
+    }
+
+    // Update space
+    const updateResult = await supabase
+      .from("spaces")
+      .update({
+        cycle_type: data.cycle_type,
+        cycle_duration_days: data.cycle_duration_days,
+        cycle_start_day: data.cycle_start_day,
+      })
+      .eq("id", data.spaceId)
+      .select()
+      .single();
+
+    if (updateResult.error) {
+      console.error("Update error:", updateResult.error);
+      return { error: `Failed to update cycle configuration: ${updateResult.error.message}` };
+    }
+
+    revalidatePath("/settings");
+
+    return { success: true, data: updateResult.data };
+  } catch (err) {
+    console.error("Update cycle config error:", err);
     return { error: "An unexpected error occurred" };
   }
 }
