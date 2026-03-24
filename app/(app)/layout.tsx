@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { ToastProvider } from "@orion-ds/react/client";
+import { Providers } from "./providers";
 import { AppHeader } from "./AppHeader";
 import { getProfile } from "@/lib/supabase/queries";
 
@@ -36,7 +36,7 @@ export default async function AppLayout({
     ""; // 3. no avatar -> Orion will show initials
 
   return (
-    <ToastProvider>
+    <Providers>
       <div className="flex flex-col min-h-screen">
         <AppHeader
           user={{
@@ -54,6 +54,6 @@ export default async function AppLayout({
           </div>
         </main>
       </div>
-    </ToastProvider>
+    </Providers>
   );
 }
