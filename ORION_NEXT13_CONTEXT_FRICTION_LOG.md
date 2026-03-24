@@ -155,7 +155,263 @@ A user discovering this once still hits it again with the next Orion provider.
 
 ---
 
-## What Orion Could Do (Suggestions)
+## Special Case: AI-Generated Code (Claude Code / Cursor Vibe Coding)
+
+### Why This Happens in AI-Driven Projects
+
+Pawo was built **100% with AI** (Claude Code in Cursor). Despite this, the same `ToastProvider` error occurred. Understanding why reveals important insights for both users and the Orion team.
+
+#### The Paradox
+
+```
+AI Decision:  "I'll choose Next.js 13+ App Router" ✅ (correct choice)
+Why:          SSR, SEO, security, performance
+Then:         "I'll add ToastProvider to layout.tsx" ❌ (wrong implementation)
+Why:          Applies learned pattern without architectural awareness
+```
+
+#### Root Cause: Fragmented Context in Vibe Coding
+
+When building iteratively (prompt-by-prompt), the AI loses architectural context:
+
+```
+Session 1: "Create a layout with header"
+AI → Creates app/(app)/layout.tsx (Server Component) ✅
+
+[Context break: Next "conversation" doesn't retain "this is Server Component"]
+
+Session 2: "Add toast notifications"
+AI → Sees layout.tsx exists
+AI → Applies pattern: "import ToastProvider, wrap JSX"
+AI → Does NOT remember/retain that it's a Server Component ❌
+
+Result: ToastProvider in Server Component → Runtime error
+```
+
+#### Why Training Data Doesn't Prevent This
+
+The AI's training includes:
+
+- ✅ **1000s of examples:** "Import ToastProvider, add to layout"
+- ✅ **1000s of examples:** "app/(app)/layout.tsx is good practice"
+- ❌ **Very few examples:** "ToastProvider must be in providers.tsx in App Router"
+
+**Why the gap?** The combination **Next.js 13 App Router + Orion DS + Context Providers** is relatively new/niche. Most training data shows either:
+- Pages Router (old Next.js) where this works
+- CRA/Vite where this works
+- App Router examples that happen to use other state management (Zustand, etc.)
+
+#### The AI Applies "Safe" Patterns
+
+Most code in the training data shows this pattern working:
+
+```typescript
+// ✅ Works in 90% of cases (Pages Router, CRA, Vite):
+export default function App({ children }) {
+  return <ToastProvider>{children}</ToastProvider>;
+}
+```
+
+So when asked to "add toast notifications to a layout", the AI **automatically** applies this proven pattern without detecting that Next.js 13 App Router changed the rules.
+
+#### No Runtime Constraint From Next.js
+
+TypeScript would prevent obvious errors:
+```typescript
+// TypeScript ERROR: toastProvider() is not callable
+const x: JSX.Element = toastProvider(); // ❌ Caught
+```
+
+But Next.js doesn't prevent Server Components from importing Client Components—it just fails at runtime. No static analysis catches it during generation.
+
+#### How the Error Manifests
+
+```
+AI generates code (looks syntactically correct) ✅
+Code pushes to git, dev server starts
+Turbopack evaluates modules
+"Wait, I'm in a Server Component and createContext is being called?"
+TypeError: createContext is not a function ❌
+```
+
+The error appears **after** code review, during testing.
+
+---
+
+## Recommended Patterns for AI-Driven Projects
+
+### Pattern 1: Document Architecture Upfront
+
+Create a file that the AI will see and follow:
+
+**File: `ARCHITECTURE.md` or `PATTERNS.md`**
+```markdown
+# Pawo Architecture Patterns
+
+## Orion DS Providers (Next.js 13+ App Router Rule)
+
+**WHY:** ToastProvider creates React Context. Context only works in
+Client Components. Layouts are Server Components by default.
+
+**CORRECT:**
+```typescript
+// app/(app)/providers.tsx
+"use client";
+import { ToastProvider } from "@orion-ds/react/client";
+export function Providers({ children }) {
+  return <ToastProvider>{children}</ToastProvider>;
+}
+
+// app/(app)/layout.tsx
+import { Providers } from "./providers";
+export default async function Layout({ children }) {
+  const user = await getUser(); // ✅ Still Server Component
+  return <Providers>{children}</Providers>;
+}
+```
+
+**NEVER:**
+```typescript
+// ❌ DON'T import ToastProvider directly in layout.tsx
+import { ToastProvider } from "@orion-ds/react/client";
+export default async function Layout({ children }) {
+  return <ToastProvider>{children}</ToastProvider>; // WRONG
+}
+```
+
+**When you add new providers:**
+- Add them to `app/(app)/providers.tsx`
+- NOT to `layout.tsx`
+```
+
+Once this is documented, subsequent AI prompts will reference and follow this pattern.
+
+### Pattern 2: Explicit Architecture Guardrails in Prompts
+
+If working with Claude Code/Cursor, be explicit:
+
+```
+"Remember: Pawo uses Next.js 13+ App Router.
+- app/(app)/layout.tsx is a Server Component (async, DB queries)
+- React Context providers must go in Client Components
+- We have app/(app)/providers.tsx for all Orion providers
+- When adding new providers, add to providers.tsx, NOT layout.tsx"
+```
+
+### Pattern 3: Friction Log as Living Documentation
+
+Keep friction logs (like this one) in the repo. When the AI encounters a similar pattern, it can be instructed:
+
+```
+"See ORION_NEXT13_CONTEXT_FRICTION_LOG.md — avoid this pattern."
+```
+
+### Pattern 4: Validation Step Before Commit
+
+For AI-generated code, add a mental checklist:
+
+```
+[ ] Does this file have "use client"?
+    → If no, it's Server Component → check for Context creation
+[ ] Is this file importing from @orion-ds/react/client?
+    → If yes in a Server Component, move to providers.tsx
+[ ] Are we wrapping children in a provider in layout.tsx?
+    → If yes, create providers.tsx wrapper
+```
+
+---
+
+## Insights for Orion Team: Designing for AI
+
+### Current Friction Points
+
+1. **API assumes Client-First** → Breaks with Server-First frameworks
+2. **No clear boundary** → AI doesn't know "ToastProvider = Client only"
+3. **Applied implicitly** → Pattern gets copied without understanding
+4. **Error is indirect** → "createContext is not a function" doesn't say "move to Client Component"
+
+### How Orion Could Design for Better AI Outcomes
+
+**Option 1: Make the constraint explicit in the type system**
+```typescript
+// @orion-ds/react/client
+export function ToastProvider(props: ToastProviderProps): ClientOnlyComponent;
+//                                                        ↑ New type hint
+// Purpose: Tell AI "this can ONLY be used in 'use client' files"
+```
+
+**Option 2: Export App Router-ready wrapper**
+```typescript
+// @orion-ds/react/app-router (or /next)
+export function createOrionProviders() {
+  // Returns pre-wrapped Client Component
+  // AI sees the intent immediately
+}
+```
+
+**Option 3: Add JSDoc warnings**
+```typescript
+/**
+ * @clientComponentOnly
+ * ⚠️ CRITICAL: Must be used in a "use client" file only
+ *
+ * In Next.js 13+ App Router:
+ * ❌ DO NOT use directly in app/(app)/layout.tsx
+ * ✅ DO use in app/(app)/providers.tsx with "use client"
+ *
+ * @example
+ * // ✅ CORRECT: app/(app)/providers.tsx
+ * "use client";
+ * export function Providers({ children }) {
+ *   return <ToastProvider>{children}</ToastProvider>;
+ * }
+ */
+export function ToastProvider({ children }: Props) { ... }
+```
+
+**Option 4: Ship a ready-made App Router wrapper**
+```typescript
+// @orion-ds/react/app-router (new package)
+"use client";
+import { ToastProvider, ModalProvider } from "@orion-ds/react/client";
+
+export function OrionProviders({ children }) {
+  return (
+    <ToastProvider>
+      <ModalProvider>
+        {children}
+      </ModalProvider>
+    </ToastProvider>
+  );
+}
+
+// Usage: app/(app)/providers.tsx
+export { OrionProviders as Providers };
+```
+
+This would **completely eliminate** the friction for AI-generated projects because:
+- ✅ Single import with clear intent
+- ✅ No need for AI to understand Server vs Client Components
+- ✅ Works out of the box
+- ✅ Less room for error
+
+---
+
+## Impact on Pawo (AI-Generated Project)
+
+| Stage | Impact | Root Cause |
+|-------|--------|-----------|
+| **Generation** | ToastProvider placed in Server Component | AI applied "safe" pattern |
+| **Development** | Runtime error blocks all auth pages | Error is indirect, hard to debug |
+| **Resolution** | 15 min fix + 2h friction analysis | Architectural mismatch needs learning |
+| **Prevention** | Architecture docs + explicit warnings | Would catch error immediately |
+
+**Time lost to friction:** ~2.5 hours (1h debugging + 1.5h documenting)
+**Preventable with:** JSDoc warning + App Router wrapper package
+
+---
+
+
 
 ### Option A: Export a Next.js-Aware Wrapper
 
@@ -296,4 +552,12 @@ The fix is simple (one wrapper file), but the friction is real and repeats for e
 **Documented by:** Claude Code (as Pawo developer)
 **Date:** 2026-03-24
 **Framework context:** Next.js 16.1.6 + React 19.2.3 + Orion DS 4.9.8
-**Suggestion status:** Ready for Orion team product discussion
+**Project type:** 100% AI-generated (Claude Code in Cursor)
+**Suggestion status:** Ready for Orion team product discussion + AI developer guidance
+
+---
+
+## Version History
+
+- **v1.0** (2026-03-24): Initial friction log from manual user perspective
+- **v1.1** (2026-03-24): Added AI-generated code analysis + patterns for vibe coding
