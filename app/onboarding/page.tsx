@@ -58,7 +58,10 @@ export default function OnboardingPage() {
         const result = await createSpaceAction({
           name: formData.spaceName,
           currency: formData.currency,
+          cycle_type: "monthly", // Default to monthly
+          cycle_duration_days: undefined,
           cycle_start_day: parseInt(formData.cycleStartDay),
+          cycle_start_date: new Date().toISOString().split("T")[0], // Start today
           split_mode: formData.splitMode,
           split_percentage: formData.splitMode === "manual" ? formData.splitPercentage : undefined,
           income: formData.splitMode === "income" ? parseFloat(formData.income || "0") : null,

@@ -7,7 +7,7 @@ import {
   createInvitation,
   createCycle,
 } from "@/lib/supabase/queries";
-import { getNextCycleStartDate, getNextCycleEndDate } from "@/lib/cycle";
+import { getNextCycleStartDate, getNextCycleEndDate, getNextCycleDates } from "@/lib/cycle";
 import { suggestSplit } from "@/lib/balance";
 import { sendInvitationEmail } from "@/lib/email";
 import crypto from "crypto";
@@ -15,7 +15,10 @@ import crypto from "crypto";
 export async function createSpaceAction(data: {
   name: string;
   currency: string;
-  cycle_start_day: number;
+  cycle_type: "weekly" | "biweekly" | "monthly" | "custom";
+  cycle_duration_days?: number;
+  cycle_start_day: number | null;
+  cycle_start_date: string;
   split_mode: "manual" | "income";
   income?: number | null;
   split_percentage?: number;
@@ -38,6 +41,8 @@ export async function createSpaceAction(data: {
       name: data.name,
       created_by: user.id,
       currency: data.currency,
+      cycle_type: data.cycle_type,
+      cycle_duration_days: data.cycle_duration_days,
       cycle_start_day: data.cycle_start_day,
       split_mode: data.split_mode,
     });
@@ -79,15 +84,16 @@ export async function createSpaceAction(data: {
       return { error: "Failed to add space member: no data returned (check RLS policies on space_members table)" };
     }
 
-    // Create initial cycle
-    const today = new Date();
-    const cycleStart = getNextCycleStartDate(data.cycle_start_day, today);
-    const cycleEnd = getNextCycleEndDate(data.cycle_start_day, today);
+    // Create initial cycle using provided cycle_start_date
+    const cycleDates = getNextCycleDates(data.cycle_type, data.cycle_start_date, {
+      cycleDurationDays: data.cycle_duration_days,
+      cycleStartDay: data.cycle_type === "monthly" ? data.cycle_start_day ?? undefined : undefined,
+    });
 
     const cycleResult = await createCycle(supabase, {
       space_id: space.id,
-      start_date: cycleStart.toISOString().split("T")[0],
-      end_date: cycleEnd.toISOString().split("T")[0],
+      start_date: cycleDates.start,
+      end_date: cycleDates.end,
     });
 
     if (cycleResult.error) {

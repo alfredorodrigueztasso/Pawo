@@ -21,7 +21,7 @@ export function SpaceOptionsMenu({ space }: SpaceOptionsMenuProps) {
   const [editFormData, setEditFormData] = useState({
     name: space.name,
     currency: space.currency,
-    cycleStartDay: space.cycle_start_day.toString(),
+    cycleStartDay: (space.cycle_start_day ?? 1).toString(),
   });
 
   function handleEditChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
