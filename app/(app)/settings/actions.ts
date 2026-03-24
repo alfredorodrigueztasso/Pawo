@@ -58,18 +58,27 @@ export async function updateIncomeAction({
       return { error: "Partner not found" };
     }
 
-    // Calculate new split percentages if both have income
+    // Calculate new split percentages
     let newPercentageCurrentUser = 50;
     let newPercentagePartner = 50;
 
     const partnerIncome = partner.monthly_income;
-    if (monthlyIncome && partnerIncome) {
-      const { percentA, percentB } = suggestSplit(
-        monthlyIncome,
-        partnerIncome
-      );
-      newPercentageCurrentUser = percentA;
-      newPercentagePartner = percentB;
+
+    // Distinguish between null (pending) and 0 (explicit zero income)
+    if (monthlyIncome != null && monthlyIncome > 0) {
+      if (partnerIncome === null) {
+        // Partner hasn't registered income yet — keep 50/50, show pending state
+        // TODO: Client should display "Waiting for partner to register income"
+      } else {
+        // Partner has registered income (can be 0 or positive)
+        const effectivePartnerIncome = partnerIncome ?? 0;
+        const { percentA, percentB } = suggestSplit(
+          monthlyIncome,
+          effectivePartnerIncome
+        );
+        newPercentageCurrentUser = percentA;
+        newPercentagePartner = percentB;
+      }
     }
 
     // Update current user's income and percentage
@@ -86,20 +95,18 @@ export async function updateIncomeAction({
       return { error: "Failed to update income" };
     }
 
-    // Update partner's percentage (if both have income)
-    if (monthlyIncome && partnerIncome) {
-      const { data: partnerMember } = await supabase
-        .from("space_members")
-        .select("id")
-        .eq("user_id", partner.user_id)
-        .eq("space_id", spaceId)
-        .single();
+    // Update partner's percentage
+    const { data: partnerMember } = await supabase
+      .from("space_members")
+      .select("id")
+      .eq("user_id", partner.user_id)
+      .eq("space_id", spaceId)
+      .single();
 
-      if (partnerMember) {
-        await updateSpaceMember(supabase, partnerMember.id, {
-          split_percentage: newPercentagePartner,
-        });
-      }
+    if (partnerMember) {
+      await updateSpaceMember(supabase, partnerMember.id, {
+        split_percentage: newPercentagePartner,
+      });
     }
 
     revalidatePath("/settings");
