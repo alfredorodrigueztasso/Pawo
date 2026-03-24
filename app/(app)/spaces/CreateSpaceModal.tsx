@@ -166,19 +166,19 @@ export function CreateSpaceModal() {
   return (
     <>
       <Button variant="primary" onClick={handleOpen}>
-        New Space
+        Nuevo Espacio
       </Button>
 
       <Modal open={isOpen} onClose={close} size="md">
-        <Modal.Header>Create Space</Modal.Header>
+        <Modal.Header>Crear Espacio</Modal.Header>
         <Modal.Body>
           <div className="flex flex-col gap-8">
             {/* Progress indicator */}
             <Stepper
               steps={[
-                { id: "1", title: "Cycles" },
-                { id: "2", title: "Split" },
-                { id: "3", title: "Partner" },
+                { id: "1", title: "Ciclos" },
+                { id: "2", title: "División" },
+                { id: "3", title: "Pareja" },
               ]}
               currentStep={step - 1}
               size="sm"
@@ -195,27 +195,27 @@ export function CreateSpaceModal() {
               {step === 1 && (
                 <>
                   <div>
-                    <h2 className="text-2xl font-bold mb-1">Configure your cycles</h2>
+                    <h2 className="text-2xl font-bold mb-1">Configura tus ciclos</h2>
                     <p className="text-sm text-secondary">
-                      Step 1 of 3: Set up expense tracking periods
+                      Paso 1 de 3: Define los períodos de seguimiento de gastos
                     </p>
                   </div>
 
                   {/* Space name */}
                   <Field
-                    label="Space name"
+                    label="Nombre del espacio"
                     type="text"
                     name="spaceName"
                     value={formData.spaceName}
                     onChange={handleInputChange}
-                    placeholder="e.g., Our Home"
+                    placeholder="ej: Nuestro hogar"
                     required
                   />
 
                   {/* Currency */}
                   <div>
                     <label className="text-sm font-medium text-primary mb-2 block">
-                      Currency
+                      Moneda
                     </label>
                     <ToggleGroup
                       type="single"
@@ -344,9 +344,9 @@ export function CreateSpaceModal() {
               {step === 2 && (
                 <>
                   <div>
-                    <h2 className="text-2xl font-bold mb-1">Choose how to split</h2>
+                    <h2 className="text-2xl font-bold mb-1">Elige cómo dividir</h2>
                     <p className="text-sm text-secondary">
-                      Step 2 of 3: Division method
+                      Paso 2 de 3: Método de división
                     </p>
                   </div>
 
@@ -363,12 +363,12 @@ export function CreateSpaceModal() {
 
                   {formData.splitMode === "income" && (
                     <Field
-                      label="Your monthly income"
+                      label="Tu ingreso mensual"
                       type="number"
                       name="income"
                       value={formData.income}
                       onChange={handleInputChange}
-                      placeholder="e.g., 3000"
+                      placeholder="ej: 3000"
                       required
                     />
                   )}
@@ -379,34 +379,34 @@ export function CreateSpaceModal() {
               {step === 3 && (
                 <>
                   <div>
-                    <h2 className="text-2xl font-bold mb-1">Invite your partner</h2>
+                    <h2 className="text-2xl font-bold mb-1">Invita a tu pareja</h2>
                     <p className="text-sm text-secondary">
-                      Step 3 of 3: Complete setup
+                      Paso 3 de 3: Completa la configuración
                     </p>
                   </div>
 
                   <Field
-                    label="Partner's name (optional)"
+                    label="Nombre de la pareja (opcional)"
                     type="text"
                     name="partnerName"
                     value={formData.partnerName}
                     onChange={handleInputChange}
-                    placeholder="e.g., Ana"
-                    helperText="Helps calculate shared expenses right away"
+                    placeholder="ej: Ana"
+                    helperText="Ayuda a calcular gastos compartidos de inmediato"
                   />
 
                   <Field
-                    label="Partner's email (optional)"
+                    label="Email de la pareja (opcional)"
                     type="email"
                     name="partnerEmail"
                     value={formData.partnerEmail}
                     onChange={handleInputChange}
-                    placeholder="partner@example.com"
+                    placeholder="pareja@example.com"
                   />
 
                   <Alert variant="info" dismissible>
-                    Optional — you can invite your partner later from the space
-                    details
+                    Opcional — puedes invitar a tu pareja más tarde desde los detalles
+                    del espacio
                   </Alert>
                 </>
               )}
@@ -423,7 +423,7 @@ export function CreateSpaceModal() {
                     size="lg"
                     className="flex-1"
                   >
-                    Back
+                    Atrás
                   </Button>
                 )}
                 <Button
@@ -435,10 +435,10 @@ export function CreateSpaceModal() {
                   className="flex-1"
                 >
                   {isPending
-                    ? "Creating..."
+                    ? "Creando..."
                     : step === 3
-                      ? "Create Space"
-                      : "Next"}
+                      ? "Crear Espacio"
+                      : "Siguiente"}
                 </Button>
               </div>
             </form>

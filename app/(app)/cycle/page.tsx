@@ -97,15 +97,15 @@ export default async function CyclePage() {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2 text-primary">Current Cycle</h1>
-        <p className="text-secondary">Manage and close your expense cycles</p>
+        <h1 className="text-4xl font-bold mb-2 text-primary">Ciclo Actual</h1>
+        <p className="text-secondary">Gestiona y cierra tus ciclos de gastos</p>
       </div>
 
       {/* Cycle Progress */}
       <Card className="p-8">
         <div className="space-y-4">
           <div>
-            <p className="text-sm text-secondary mb-2">Period</p>
+            <p className="text-sm text-secondary mb-2">Período</p>
             <p className="text-lg font-semibold text-primary">
               {formatCyclePeriod(
                 parseLocalDate(cycle.start_date),
@@ -114,7 +114,7 @@ export default async function CyclePage() {
             </p>
           </div>
           <div>
-            <p className="text-sm text-secondary mb-2">Progress</p>
+            <p className="text-sm text-secondary mb-2">Progreso</p>
             <div className="w-full bg-surface-subtle rounded-full h-3">
               <div
                 className="bg-brand h-3 rounded-full transition-all"
@@ -125,15 +125,15 @@ export default async function CyclePage() {
               <Badge variant={progressStage.variant} size="sm">
                 {progressStage.text}
               </Badge>
-              <span className="text-xs text-secondary">({progress}% of cycle)</span>
+              <span className="text-xs text-secondary">({progress}% del ciclo)</span>
             </div>
           </div>
 
           <div className="pt-4 border-t border-border-subtle">
-            <p className="text-sm text-secondary mb-2">Summary</p>
+            <p className="text-sm text-secondary mb-2">Resumen</p>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-secondary">Total expenses:</span>
+                <span className="text-secondary">Total de gastos:</span>
                 <span className="font-semibold text-primary">
                   {formatCurrency(
                     cycleExpenses.reduce((sum, e) => sum + e.amount, 0),
@@ -142,7 +142,7 @@ export default async function CyclePage() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-secondary">Entries:</span>
+                <span className="text-secondary">Registros:</span>
                 <span className="font-semibold text-primary">{cycleExpenses.length}</span>
               </div>
             </div>

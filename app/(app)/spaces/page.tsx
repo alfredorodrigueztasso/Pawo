@@ -52,13 +52,13 @@ export default async function SpacesPage() {
     return (
       <>
         <div className="mb-10 flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-primary">Spaces</h1>
+          <h1 className="text-4xl font-bold text-primary">Espacios</h1>
           <CreateSpaceModal />
         </div>
         <Card className="p-8 text-center">
-          <p className="text-secondary mb-4">No spaces found</p>
+          <p className="text-secondary mb-4">No se encontraron espacios</p>
           <p className="text-sm text-tertiary mb-6">
-            Create your first space to start tracking shared expenses
+            Crea tu primer espacio para empezar a rastrear gastos compartidos
           </p>
           <div className="inline-block">
             <CreateSpaceModal />
@@ -204,7 +204,7 @@ export default async function SpacesPage() {
   return (
     <>
       <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-4xl font-bold text-primary">Spaces</h1>
+        <h1 className="text-4xl font-bold text-primary">Espacios</h1>
         <CreateSpaceModal />
       </div>
 
