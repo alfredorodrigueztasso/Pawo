@@ -37,7 +37,7 @@ export default async function RootLayout({
     <html
       lang="en"
       data-theme={theme}
-      data-brand="ember"
+      data-brand="orange"
       data-mode="app"
       suppressHydrationWarning
       className={`${dmSans.variable} ${inter.variable}`}
