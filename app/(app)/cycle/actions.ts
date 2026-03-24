@@ -20,38 +20,51 @@ export async function closeCycleAction(data: {
       return { error: "Not authenticated" };
     }
 
-    // Close current cycle
+    // VERIFY BEFORE MUTATING: Check that cycle belongs to the declared space
+    const cycleCheckResult = await supabase
+      .from("cycles")
+      .select("space_id, end_date")
+      .eq("id", data.cycleId)
+      .eq("space_id", data.spaceId)
+      .single();
+
+    if (!cycleCheckResult.data) {
+      return { error: "Cycle not found in this space" };
+    }
+
+    // VERIFY BEFORE MUTATING: Check that user is a member of the space
+    const memberCheckResult = await supabase
+      .from("space_members")
+      .select("user_id")
+      .eq("space_id", data.spaceId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (!memberCheckResult.data) {
+      return { error: "You are not a member of this space" };
+    }
+
+    // Now that we've verified ownership, proceed with closing the cycle
     const closeResult = await closeCycle(supabase, data.cycleId, user.id, data.summary);
 
     if (closeResult.error) {
       return { error: `Failed to close cycle: ${closeResult.error.message}` };
     }
 
-    // Get space config and current cycle end_date
-    const [spaceResult, cycleResult] = await Promise.all([
-      supabase
-        .from("spaces")
-        .select("cycle_type, cycle_duration_days, cycle_start_day")
-        .eq("id", data.spaceId)
-        .single(),
-      supabase
-        .from("cycles")
-        .select("end_date")
-        .eq("id", data.cycleId)
-        .single(),
-    ]);
+    // Get space config for creating next cycle
+    const spaceResult = await supabase
+      .from("spaces")
+      .select("cycle_type, cycle_duration_days, cycle_start_day")
+      .eq("id", data.spaceId)
+      .single();
 
     if (!spaceResult.data) {
       return { error: "Space not found" };
     }
 
-    if (!cycleResult.data) {
-      return { error: "Cycle not found" };
-    }
-
     // Calculate next cycle: starts day after current cycle ends
     // Use addDays helper manually since we're in a server action
-    const currentEndDate = new Date(cycleResult.data.end_date);
+    const currentEndDate = new Date(cycleCheckResult.data.end_date);
     const nextStartDate = new Date(currentEndDate);
     nextStartDate.setDate(nextStartDate.getDate() + 1);
 
