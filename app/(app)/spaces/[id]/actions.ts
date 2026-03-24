@@ -28,18 +28,24 @@ export async function updateSpaceAction({
       return { error: "Not authenticated" };
     }
 
-    // Update space
-    const { error } = await supabase
+    // Update space with ownership check (add created_by to the eq conditions)
+    const { error, count } = await supabase
       .from("spaces")
       .update({
         name,
         currency,
         cycle_start_day: cycleStartDay,
       })
-      .eq("id", spaceId);
+      .eq("id", spaceId)
+      .eq("created_by", user.id);
 
     if (error) {
       return { error: `Failed to update space: ${error.message}` };
+    }
+
+    // If count is 0, space not found or user is not owner
+    if (!count) {
+      return { error: "Only the space owner can perform this action" };
     }
 
     revalidatePath("/spaces");
@@ -67,14 +73,21 @@ export async function deleteSpaceAction({
     return { error: "Not authenticated" };
   }
 
-  // Delete space (this will cascade to space_members and other related records)
-  const { error } = await supabase
+  // Delete space with ownership check (add created_by to the eq conditions)
+  // This will cascade to space_members and other related records
+  const { error, count } = await supabase
     .from("spaces")
     .delete()
-    .eq("id", spaceId);
+    .eq("id", spaceId)
+    .eq("created_by", user.id);
 
   if (error) {
     return { error: `Failed to delete space: ${error.message}` };
+  }
+
+  // If count is 0, space not found or user is not owner
+  if (!count) {
+    return { error: "Only the space owner can delete a space" };
   }
 
   revalidatePath("/spaces", "layout");
