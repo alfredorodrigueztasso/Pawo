@@ -92,6 +92,15 @@ export function calculateSoloBalance(
 }
 
 export function suggestSplit(incomeA: number, incomeB: number) {
+  // Validate that incomes are non-negative numbers
+  if (isNaN(incomeA) || isNaN(incomeB)) {
+    throw new Error("Income values must be valid numbers");
+  }
+
+  if (incomeA < 0 || incomeB < 0) {
+    throw new Error("Income values must be non-negative");
+  }
+
   const total = incomeA + incomeB;
   if (total === 0) return { percentA: 50, percentB: 50 };
 
