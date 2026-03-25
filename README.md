@@ -163,10 +163,42 @@ npm run start
 
 Set environment variables on your host (Heroku, Railway, etc.)
 
+## 📚 Documentation
+
+Complete documentation is organized in `docs/` and at the project root:
+
+| Document | Purpose |
+|----------|---------|
+| **[docs/INDEX.md](docs/INDEX.md)** | Navigation guide to all documentation |
+| **[PRODUCT_VISION.md](PRODUCT_VISION.md)** | Product roadmap and completed features |
+| **[NEXT_STEPS.md](NEXT_STEPS.md)** | Next features to build and testing checklist |
+| **[BUGS_ENCONTRADOS.md](BUGS_ENCONTRADOS.md)** | QA audit findings (resolved and pending) |
+
+See **[docs/INDEX.md](docs/INDEX.md)** for the full documentation structure.
+
+## 🤖 AI Skills
+
+This project includes specialized AI agents (skills) for different roles:
+
+| Skill | Role | Use When |
+|-------|------|----------|
+| `/pawo-design-lead` | Design direction | Aligning features with product vision |
+| `/pawo-pm` | Product specs | Planning and breaking down features |
+| `/pawo-architect` | Architecture decisions | Major technical decisions |
+| `/pawo-lead` | Code review | Validating implementation |
+| `/pawo-ui` | UI components | Building UI with Orion DS |
+| `/pawo-backend` | Backend logic | Database and server actions |
+| `/pawo-qa` | Quality assurance | Testing and bug detection |
+
+See [.claude/skills/README.md](.claude/skills/README.md) for more details.
+
 ## 📞 Support
 
-Questions? Check the code comments or open an issue.
+- **Documentation:** See [docs/INDEX.md](docs/INDEX.md) for navigation
+- **Code questions:** Check existing code comments
+- **Feature requests:** Use `/pawo-pm` skill
+- **Bug reports:** See [BUGS_ENCONTRADOS.md](BUGS_ENCONTRADOS.md)
 
 ---
 
-**Built for couples who want clarity without complexity** ❤️
+**Built for couples who want clarity without complexity**
