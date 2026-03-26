@@ -9,7 +9,9 @@ Welcome to the Pawo documentation system. This guide helps you navigate all proj
 | Section | Purpose | Files |
 |---------|---------|-------|
 | **Getting Started** | Setup, quick start, first run | README.md, SETUP.md (planned) |
-| **Product** | Vision, roadmap, feature specs | PRODUCT_VISION.md, NEXT_STEPS.md |
+| **Product** | Vision, roadmap, feature specs | PRODUCT_VISION.md, ROADMAP.md |
+| **Implementation** | Status, progress, tracking | implementation/STATUS.md |
+| **Infrastructure** | Dependencies, upgrades, tooling | infrastructure/orion/ |
 | **Architecture** | Tech decisions, patterns, design | ARCHITECTURE.md (planned) |
 | **Technical** | Data model, API, components | DATA_MODEL.md, API.md (planned) |
 | **Quality** | Bugs, testing, QA findings | BUGS_ENCONTRADOS.md, test-checklist.md |
@@ -24,11 +26,11 @@ Welcome to the Pawo documentation system. This guide helps you navigate all proj
 pawo/
 ├── README.md                           # Start here: what is Pawo, quick start
 ├── PRODUCT_VISION.md                   # Product vision, MVP, roadmap
-├── NEXT_STEPS.md                       # Next features to build
 ├── BUGS_ENCONTRADOS.md                 # QA audit findings (resolved + pending)
 │
 ├── docs/
 │   ├── INDEX.md                        # You are here
+│   ├── ROADMAP.md                      # Next features to build (planning)
 │   ├── SETUP.md                        # (planned) Local development setup
 │   ├── ARCHITECTURE.md                 # (planned) System design & patterns
 │   ├── DATA_MODEL.md                   # (planned) Database schema
@@ -36,12 +38,18 @@ pawo/
 │   ├── API.md                          # (planned) Server Actions reference
 │   ├── COMPONENTS.md                   # (planned) Orion DS usage guide
 │   ├── test-checklist.md               # Testing matrix
-│   ├── adr/                            # (planned) Architecture Decision Records
+│   ├── adr/                            # Architecture Decision Records
 │   │   ├── 001-use-orion-ds.md
 │   │   └── 002-supabase-auth.md
-│   └── friction/                       # (planned) Framework learnings
-│       ├── orion-5-3-0.md
-│       └── orion-next13-app-router.md
+│   ├── friction/                       # Framework learnings & barriers
+│   │   ├── orion-5-3-0.md
+│   │   └── orion-next13-app-router.md
+│   ├── implementation/                 # Implementation tracking & status
+│   │   └── STATUS.md
+│   └── infrastructure/                 # Infrastructure & dependencies
+│       └── orion/
+│           ├── UPGRADE_PLAN.md         # Orion DS version upgrade plans
+│           └── FEEDBACK_v5.5.4.md      # User experience & feedback
 │
 ├── .claude/skills/                     # Team of specialized AI agents
 │   ├── README.md                       # Overview of all skills
@@ -72,9 +80,10 @@ pawo/
 
 ### I'm new to Pawo
 1. Read: **README.md** (what, why, quick start)
-2. Read: **PRODUCT_VISION.md** (features, roadmap)
-3. Explore: **app/** folder structure
-4. Run: `npm install && npm run dev`
+2. Read: **PRODUCT_VISION.md** (features, vision)
+3. Read: **docs/ROADMAP.md** (what's planned next)
+4. Explore: **app/** folder structure
+5. Run: `npm install && npm run dev`
 
 ### I'm implementing a feature
 1. **Plan phase:** Use `/pawo-pm` skill to write spec
@@ -98,8 +107,9 @@ pawo/
 ### I'm debugging Orion DS issues
 1. Check **docs/friction/orion-5-3-0.md** (component barriers)
 2. Check **docs/friction/orion-next13-app-router.md** (framework learnings)
-3. Check **NEXT_STEPS.md** for known issues with Orion
-4. Use `/pawo-ui` skill for component help
+3. Check **docs/infrastructure/orion/FEEDBACK_v5.5.4.md** (version feedback)
+4. Check **docs/ROADMAP.md** for known issues with Orion
+5. Use `/pawo-ui` skill for component help
 
 ### I need to understand the database
 1. Read: **NEXT_STEPS.md** → "Database migrations" section
@@ -125,14 +135,16 @@ pawo/
 
 | Event | Docs to Update |
 |-------|---|
-| New feature implemented | NEXT_STEPS.md, ARCHITECTURE.md, API.md |
-| Database schema changes | DATA_MODEL.md, NEXT_STEPS.md |
+| New feature implemented | docs/ROADMAP.md, docs/ARCHITECTURE.md, docs/API.md |
+| Database schema changes | docs/DATA_MODEL.md, docs/ROADMAP.md |
 | Bug found | BUGS_ENCONTRADOS.md |
 | Bug resolved | BUGS_ENCONTRADOS.md (move section) |
-| New dependency added | README.md, ARCHITECTURE.md |
+| New dependency added | README.md, docs/ARCHITECTURE.md |
+| Dependency upgrade | docs/infrastructure/COMPONENT/FEEDBACK_*.md, docs/ROADMAP.md |
 | Architectural decision | docs/adr/NNN-title.md |
-| New pattern/convention | CONVENTIONS.md |
+| New pattern/convention | docs/CONVENTIONS.md |
 | Framework learning | docs/friction/topic.md |
+| Implementation progress | docs/implementation/STATUS.md |
 
 ---
 
@@ -141,8 +153,9 @@ pawo/
 ### Main project docs (always keep updated)
 - **README.md** — First impression, setup, quick start
 - **PRODUCT_VISION.md** — What we're building and why
-- **NEXT_STEPS.md** — What's next to build or fix
+- **docs/ROADMAP.md** — What's next to build or fix
 - **BUGS_ENCONTRADOS.md** — Known issues and fixes
+- **docs/implementation/STATUS.md** — Current implementation progress
 
 ### Technical deep dives (build gradually)
 - **docs/SETUP.md** — Detailed local development
@@ -158,6 +171,10 @@ pawo/
 ### Learning & barriers (live as we learn)
 - **docs/friction/orion-5-3-0.md** — Component discovery & blockers
 - **docs/friction/orion-next13-app-router.md** — Framework + router learnings
+
+### Infrastructure & Dependencies (tech upgrades & feedback)
+- **docs/infrastructure/orion/UPGRADE_PLAN.md** — Version upgrade planning
+- **docs/infrastructure/orion/FEEDBACK_v5.5.4.md** — User experience reports
 
 ### Skills & workflows (how team works)
 - **.claude/skills/README.md** — Overview of all 12 specialized agents
@@ -189,7 +206,7 @@ grep -r "TODO" /Users/alfredo/Documents/pawo/docs/
 
 ---
 
-**Last updated:** 2026-03-24
+**Last updated:** 2026-03-26
 **Maintained by:** /pawo-docs skill
-**Status:** Core structure in place, gradual expansion in progress
+**Status:** Core structure in place, organized by category (product, implementation, infrastructure). Gradual expansion in progress.
 

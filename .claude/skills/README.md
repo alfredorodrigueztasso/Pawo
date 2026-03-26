@@ -1,18 +1,19 @@
 # Pawo Skills — Tu equipo de builders expertos
 
-Aquí viven los 7 agentes especializados que aceleran el desarrollo de Pawo.
+Aquí viven los 11 agentes especializados que aceleran el desarrollo de Pawo.
 
 ---
 
-## 👑 El equipo
+## El equipo
 
-### ⭐ `/pawo-design-lead` — Design Lead
+### Estrategia y visión (Sonnet)
+
+#### `/pawo-design-lead` — Design Lead
 **El cerebro del producto.** Define cómo debe *sentirse* cada feature. Visión, experiencia, coherencia.
 
 Úsalo cuando:
 - Quieras revisar si una feature está alineada con la visión de Pawo
 - Necesites evaluar un cambio de UI desde la perspectiva del usuario
-- Dudes entre dos enfoques de diseño
 - Quieras definir cómo debe verse una feature ANTES de construirla
 
 ```
@@ -23,7 +24,7 @@ Propuesta: Agregar un botón de "copiar gasto" para duplicarlo.
 
 ---
 
-### 🏗️ `/pawo-pm` — Product Manager
+#### `/pawo-pm` — Product Manager
 **Convierte ideas en specs ejecutables.** Describe el qué, el por qué, y los criterios de éxito.
 
 Úsalo cuando:
@@ -38,12 +39,47 @@ Feature: Usuarios quieren ver cuánto gastaron por mes en los últimos 6 meses.
 
 ---
 
-### 🚀 `/pawo-lead` — Tech Lead
-**Árbitro técnico.** Revisa código, detecta anti-patrones, toma decisiones de arquitectura.
+#### `/pawo-architect` — Arquitecto de Software
+**Diseña la estructura técnica a largo plazo.** ADRs, dependencias, escalabilidad, patrones.
+
+Úsalo cuando:
+- Necesites tomar una decisión tecnológica importante
+- Quieras evaluar si agregar una nueva dependencia
+- Planifiques cómo escalar una feature (ej: de parejas a grupos)
+- Necesites documentar un ADR
+
+```
+/pawo-architect
+¿Deberíamos usar Redis para cache de balances o es prematuro?
+```
+
+---
+
+#### `/pawo-security` — Security Specialist
+**Protege los datos financieros de los usuarios.** RLS, auth, validación, secrets, vulnerabilidades.
+
+Úsalo cuando:
+- Quieras auditar la seguridad de una feature o tabla
+- Necesites escribir o revisar policies RLS
+- Dudes si un input está correctamente validado
+- Quieras un reporte de vulnerabilidades
+
+```
+/pawo-security
+Audita las policies RLS de la tabla expenses.
+¿Un usuario puede ver gastos de otro space?
+```
+
+---
+
+### Revisión y calidad (Sonnet)
+
+#### `/pawo-lead` — Tech Lead
+**Árbitro técnico.** Revisa código, detecta anti-patrones, toma decisiones de arquitectura day-to-day.
 
 Úsalo cuando:
 - Termines un feature y quieras que alguien revise el código
-- Dudes sobre cómo estructurar algo arquitectónicamente
+- Dudes sobre cómo estructurar algo
 - Necesites validar que seguiste los patrones del proyecto
 
 ```
@@ -53,39 +89,7 @@ Acabo de implementar una feature nueva. ¿Está lista para main?
 
 ---
 
-### 🎨 `/pawo-ui` — Frontend Specialist
-**Construye UI hermosa con Orion DS.** Sabe cada componente, patrón y token.
-
-Úsalo cuando:
-- Necesites implementar un componente nuevo
-- Dudes sobre qué componente de Orion usar
-- Quieras refactorizar UI existente
-
-```
-/pawo-ui
-Necesito un modal para agregar un nuevo miembro al space.
-¿Cómo debería verse con Orion DS?
-```
-
----
-
-### 🗄️ `/pawo-backend` — Backend Specialist
-**Implementa lógica de servidor, queries y RLS.** Knows Supabase deeply.
-
-Úsalo cuando:
-- Necesites escribir una query nueva
-- Quieras agregar una columna a la DB
-- Dudes cómo estructurar un Server Action
-
-```
-/pawo-backend
-Necesito agregar un campo "categoría" a los gastos.
-¿Cómo debería hacerse?
-```
-
----
-
-### 🧪 `/pawo-qa` — QA Specialist
+#### `/pawo-qa` — QA Specialist
 **Audita calidad, escribe tests, detecta bugs.** Guardián de confiabilidad.
 
 Úsalo cuando:
@@ -100,7 +104,69 @@ Audita lib/balance.ts y detecta problemas potenciales.
 
 ---
 
-### 📦 `/pawo-commit` — Git Workflow
+### Ejecución (Haiku)
+
+#### `/pawo-ui` — Frontend Specialist
+**Construye UI con Orion DS.** Sabe cada componente, patrón y token.
+
+Úsalo cuando:
+- Necesites implementar un componente nuevo
+- Dudes sobre qué componente de Orion usar
+- Quieras refactorizar UI existente
+
+```
+/pawo-ui
+Necesito un modal para agregar un nuevo miembro al space.
+```
+
+---
+
+#### `/pawo-backend` — Backend Specialist
+**Implementa lógica de servidor, queries y RLS.** Knows Supabase deeply.
+
+Úsalo cuando:
+- Necesites escribir una query nueva
+- Quieras agregar una columna a la DB
+- Dudes cómo estructurar un Server Action
+
+```
+/pawo-backend
+Necesito agregar un campo "categoría" a los gastos.
+```
+
+---
+
+#### `/pawo-docs` — Documentador y Organizador
+**Mantiene la documentación técnica y la estructura de archivos.** READMEs, convenciones, changelogs.
+
+Úsalo cuando:
+- Necesites documentar una feature o decisión
+- Quieras reorganizar archivos o carpetas
+- La documentación esté desactualizada
+
+```
+/pawo-docs
+Documenta el data model actual de Pawo en docs/DATA_MODEL.md
+```
+
+---
+
+#### `/pawo-devops` — DevOps / Infraestructura
+**Gestiona deploys, CI/CD y monitoreo.** Vercel, Supabase, GitHub Actions.
+
+Úsalo cuando:
+- Necesites configurar un pipeline de CI/CD
+- Tengas problemas con un deploy
+- Quieras optimizar performance o bundle size
+
+```
+/pawo-devops
+Configura GitHub Actions para lint + build en cada PR.
+```
+
+---
+
+#### `/pawo-commit` — Git Workflow
 **Automatiza commit y push a GitHub.** Revisa cambios, genera mensaje, pushea a main.
 
 Úsalo cuando:
@@ -108,85 +174,50 @@ Audita lib/balance.ts y detecta problemas potenciales.
 
 ```
 /pawo-commit
-"Implementar página de perfil del usuario"
 ```
 
 ---
 
-## 🎯 Flujo de trabajo recomendado
+## Flujo de trabajo recomendado
 
 ```
 IDEA
   ↓
 /pawo-design-lead (¿alineado con visión?)
   ↓
-/pawo-pm (¿qué es exactamente lo que vamos a hacer?)
+/pawo-pm (spec ejecutable)
+  ↓
+/pawo-architect (¿impacto estructural? ¿ADR necesario?)
   ↓
 /pawo-ui + /pawo-backend (implementar)
   ↓
-/pawo-lead (¿código está bien?)
+/pawo-security (¿seguro? ¿RLS correcta?)
+  ↓
+/pawo-lead (¿código sigue patrones?)
   ↓
 /pawo-qa (¿hay bugs?)
+  ↓
+/pawo-docs (documentar cambios)
+  ↓
+/pawo-devops (deploy checklist)
   ↓
 /pawo-commit (push a GitHub)
 ```
 
-No siempre necesitas todos. Una feature de UI pura: Design Lead → PM → UI → Lead → QA → Commit.
+No siempre necesitas todos. Adapta según el tipo de cambio:
+- **Feature nueva completa:** Todos los pasos
+- **Bug fix:** Security → Backend/UI → Lead → QA → Commit
+- **Refactor:** Architect → Lead → QA → Docs → Commit
+- **UI polish:** Design Lead → UI → Lead → Commit
+- **Security fix:** Security → Backend → Lead → QA → Commit
 
 ---
 
-## 💡 Ejemplos reales
-
-### Feature: Editar gastos pasados
-```
-/pawo-design-lead
-¿Es seguro permitir que los usuarios editen gastos? ¿Cómo afecta el balance?
-→ Output: Permitir editar dentro de 24h, después de cerrar ciclo es locked
-
-/pawo-pm
-Escribir spec completo de "edit expenses within 24h, locked after"
-
-/pawo-backend
-Agregar trigger en DB que previene edición después de 24h
-
-/pawo-ui
-Build edit modal usando Orion Modal pattern
-
-/pawo-lead
-¿El código sigue los patrones?
-
-/pawo-qa
-Auditar: ¿qué pasa si intento editar un gasto de 25h atrás?
-
-/pawo-commit
-Push a GitHub
-```
-
-### Feature: Dark mode
-```
-/pawo-design-lead
-¿Cómo debería verse Pawo en dark mode? ¿Debería ser automático o manual?
-
-/pawo-pm
-Spec: Manual toggle en settings, persistir preferencia
-
-/pawo-ui
-Implementar toggle + asegurar que TODOS los componentes funcionen en dark
-
-/pawo-qa
-Auditar dark mode en cada página
-
-/pawo-commit
-Push
-```
-
----
-
-## 📚 Stack de referencia
+## Stack de referencia
 
 | Área | Tecnología |
 |------|-----------|
-| Frontend | Next.js 16 + React 19 |
+| Frontend | Next.js 16.1.6 + React 19 |
 | Styling | Tailwind CSS v4 + Orion DS 4.2.10 |
 | Backend | Supabase (PostgreSQL) |
 | Auth | @supabase/ssr |
@@ -194,10 +225,12 @@ Push
 | Email | Resend 6.9.3 |
 | State | Zustand 5 |
 | Icons | lucide-react |
+| Hosting | Vercel |
+| CI/CD | GitHub Actions (propuesto) |
 
 ---
 
-## 🚨 Bugs conocidos
+## Bugs conocidos
 
 - `split_override` en gastos no se procesa en cálculos
 - `ReviewPanel` usa `window.location.reload()` en lugar de `router.refresh()`
@@ -206,21 +239,25 @@ Push
 
 ---
 
-## 📍 Ubicación del equipo
+## Ubicación del equipo
 
 Todos los skills viven en `pawo/.claude/skills/` — viajan con el proyecto en git.
 
 ```
 pawo/.claude/skills/
-├── pawo-design-lead/
-├── pawo-pm/
-├── pawo-lead/
-├── pawo-ui/
-├── pawo-backend/
-├── pawo-qa/
-└── pawo-commit/
+├── pawo-design-lead/   (sonnet)
+├── pawo-pm/            (sonnet)
+├── pawo-architect/     (sonnet)  ← NUEVO
+├── pawo-security/      (sonnet)  ← NUEVO
+├── pawo-lead/          (sonnet)
+├── pawo-qa/            (sonnet)
+├── pawo-ui/            (haiku)
+├── pawo-backend/       (haiku)
+├── pawo-docs/          (haiku)   ← NUEVO
+├── pawo-devops/        (haiku)   ← NUEVO
+└── pawo-commit/        (haiku)
 ```
 
 ---
 
-**Made with ❤️ for Pawo builders**
+**Made with care for Pawo builders**
